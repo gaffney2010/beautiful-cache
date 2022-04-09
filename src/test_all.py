@@ -82,7 +82,7 @@ class TestStringMethods(unittest.TestCase):
 
     # No compaction
     def test_happy_path(self):
-        example_html = """
+        example_html = Html("""
         <html><body>
         <table>
         <tr>
@@ -95,12 +95,12 @@ class TestStringMethods(unittest.TestCase):
         </tr>
         </table>
         </body</html>
-        """
+        """)
 
-        engine = PolicyEngineGenerator().add_website("test_url", example_html).build()
+        engine = PolicyEngineGenerator().add_website(Url("test_url"), example_html).build()
 
         # Should be able to inject engines like this
-        soup = bc.BeautifulCache("test_url", "test_policy", engine=engine)
+        soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
         cells = soup.find_all("td")
         # The materialize returns the usual BeautifulSoup objects.
         link0 = cells[0].find("a").materialize()
@@ -121,8 +121,8 @@ class TestStringMethods(unittest.TestCase):
         self.assertDictEqual(
             engine.database.db,
             {
-                ("test_policy", ""): 0,
-                ("test_policy", "a"): 0,
+                (Policy("test_policy"), Id("")): 0,
+                (Policy("test_policy"), Id("a")): 0,
                 # There will be a third row when I fix my id logic.
                 # ("test_policy", ""): 0,
             },
