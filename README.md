@@ -6,6 +6,8 @@ Work in progress - the below isn't implemented yet.
 ## Policy
 A policy refers to a set of URLs that share a memory space.  They are named by the directory where the files are saved.
 
+TODO: describe the file structure.
+
 ## Request database
 Every time a tag in the soup is read, we add a message to the Request database.  The messages are formatted like this: "body/div/p:1/a:2", which means take the second `a` tag in the first `p` tag in the first `div` tag in the `body`.  (Note: The `:1` is optional.)  Reading this request will return the entire `a` tag, even if it has subtags.  It will return this as a BeautifulSoup object.  We can access these with usual BeautifulSoup patterns:
 

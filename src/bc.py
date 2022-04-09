@@ -1,17 +1,10 @@
 """We start with all the code in one file, but this will evolve later."""
 
-from typing import Callable, Dict, Optional
+from typing import Optional
 
 import attr
 
-
-# TODO: Use shared_types paradigm.  Sooner would be great!
-Html = str
-Policy = str
-Url = str
-# TODO: What is this?  Ms since epoch?
-Time = int
-Row = Dict[str, str]
+from shared_types import *
 
 
 # Make a bunch of abstract base classes.

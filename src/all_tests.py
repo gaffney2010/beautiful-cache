@@ -4,11 +4,12 @@ from typing import Dict
 import unittest
 
 import bc
+from shared_types import *
 
 
 # Make functionless mocks.  This will all get replaced later.
 class DeadDatabase(bc.Database):
-    def append(self, row: bc.Row) -> None:
+    def append(self, row: Row) -> None:
         pass
 
 
@@ -24,18 +25,18 @@ class DeadClock(bc.Clock):
     def __init__(self):
         pass
 
-    def now(self) -> bc.Time:
+    def now(self) -> Time:
         """Even a broken clock is right exactly once in 1970."""
         return 0
 
 
 # Takes a dict at init time.
 class UrlReader(object):
-    def __init__(self, internet: Dict[bc.Url, bc.Html]):
+    def __init__(self, internet: Dict[Url, Html]):
         self.internet = internet
         super().__init__()
 
-    def read(self, url: bc.Url) -> bc.Html:
+    def read(self, url: Url) -> Html:
         return self.internet[url]
 
 
@@ -46,9 +47,9 @@ class PolicyEngineGenerator(object):
     """
 
     def __init__(self):
-        self.internet: Dict[bc.Url, bc.Html] = dict()
+        self.internet: Dict[Url, Html] = dict()
 
-    def add_website(self, url: bc.Url, html: bc.Html) -> None:
+    def add_website(self, url: Url, html: Html) -> None:
         self.internet[url] = html
 
     def build(self) -> bc.PolicyEngine:
