@@ -82,7 +82,8 @@ class TestStringMethods(unittest.TestCase):
 
     # No compaction
     def test_happy_path(self):
-        example_html = Html("""
+        example_html = Html(
+            """
         <html><body>
         <table>
         <tr>
@@ -95,9 +96,12 @@ class TestStringMethods(unittest.TestCase):
         </tr>
         </table>
         </body</html>
-        """)
+        """
+        )
 
-        engine = PolicyEngineGenerator().add_website(Url("test_url"), example_html).build()
+        engine = (
+            PolicyEngineGenerator().add_website(Url("test_url"), example_html).build()
+        )
 
         # Should be able to inject engines like this
         soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
