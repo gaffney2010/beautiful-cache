@@ -5,6 +5,7 @@ import bs4
 
 import bc
 from shared_types import *
+from src.bc import UrlReader
 
 
 # Make functionless mocks.  This will all get replaced later.
@@ -31,7 +32,7 @@ class DeadClock(bc.Clock):
 
 
 # Takes a dict at init time.
-class UrlReader(object):
+class MockUrlReader(UrlReader):
     def __init__(self, internet: Dict[Url, Html]):
         self.internet = internet
         super().__init__()
@@ -55,7 +56,7 @@ class PolicyEngineGenerator(object):
 
     def build(self) -> bc.PolicyEngine:
         return bc.PolicyEngine(
-            url_reader=UrlReader(self.internet),
+            url_reader=MockUrlReader(self.internet),
             database=DeadDatabase(),
             file_system=DeadFileSystem(),
             clock=DeadClock(),
