@@ -1,7 +1,7 @@
 from typing import Dict, Tuple
 import unittest
 
-import bs4
+import bs4  # type: ignore
 
 import bc
 from shared_types import *
@@ -14,7 +14,7 @@ class DeadClock(bc.Clock):
 
     def now(self) -> Time:
         """Even a broken clock is right exactly once in 1970."""
-        return 0
+        return Time(0)
 
 
 # Takes a dict at init time.

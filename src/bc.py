@@ -3,7 +3,7 @@
 from typing import List, Optional
 
 import attr
-import bs4
+import bs4  # type: ignore
 
 from shared_types import *
 
@@ -64,7 +64,7 @@ class PolicyEngine(object):
     def read_url(self, url: Url, policy: Policy) -> Html:
         """Reads url, saving an access record to the database at the same time."""
         html = self.url_reader._read(url)
-        self.append(policy, "")  # Store the root
+        self.append(policy, Id(""))  # Store the root
         return html
 
 
@@ -77,7 +77,7 @@ class CacheTag(object):
 
         self.root = False
 
-        self._id: Id = None
+        self._id: Optional[Id] = None
 
     # TODO: Make a CacheTagList object that we allow to materialize all at once.
     def find_all(self, *args, **kwargs) -> List["CacheTag"]:
@@ -113,7 +113,7 @@ class CacheTag(object):
 def cached_read(url: Url, policy: Policy, engine: PolicyEngine) -> Html:
     # TODO: Need to sanitize URLs into keys somehow.
     if engine.file_system.exists(url):
-        return engine.file_system.read(url)
+        return Html(engine.file_system.read(url))
 
     result = engine.read_url(url, policy)
     engine.file_system.write(url, result)
@@ -121,10 +121,10 @@ def cached_read(url: Url, policy: Policy, engine: PolicyEngine) -> Html:
 
 
 class BeautifulCache(CacheTag):
-    def __init__(self, url: Url, policy: Policy, engine: Optional[PolicyEngine] = None):
+    def __init__(self, url: Url, policy: Policy, engine: PolicyEngine):
         self.url = url
         self.policy = policy
-        # TODO: Default engine if not specified.
+        # TODO: Default engine if not specified.  Make input param Optional then.
         self.engine = engine
 
         html = cached_read(self.url, self.policy, engine=engine)
