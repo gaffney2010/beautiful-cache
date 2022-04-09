@@ -123,6 +123,11 @@ Later to compact.  (Maybe be run manually or scheduled.)
 bc.Compact(policy, settings={"max_bytes": 1e9, "strategy": "fat"})
 ```
 
+## Web-driver
+For V1, we'll use the Selenium FireFox headless driver.  This requires special download (google Selenium).  We'll retry 3 times with no jitters.  Because the program may download at any time, it's not recommended that this is ever run in parallel.
+
+Future versions may allow different drivers to be injected.  (Or at least document install process better.)
+
 ## Supported code
 Our V1 will support only `find_all` and `find` with all the usual arguments.  From there additional functionality can be used by materializing the tag, then working with the BeautifulSoup objects.
 
