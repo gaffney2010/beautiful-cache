@@ -1,7 +1,7 @@
-# TODO: Rename file (?) and set up testing make command.
-
 from typing import Dict
 import unittest
+
+import bs4
 
 import bc
 from shared_types import *
@@ -90,7 +90,8 @@ class TestStringMethods(unittest.TestCase):
         link0 = cells[0].find("a").materialize()
         link3 = cells[3].find("a").materialize()
 
-        # TODO: Assert links are BS tag types
+        self.assertTrue(isinstance(link0, bs4.element.Tag))
+        self.assertTrue(isinstance(link3, bs4.element.Tag))
         self.assertEqual(link0.string, "cell:1")
         self.assertEqual(link3.string, "cell:2")
         # TODO: Assert links have expected hrefs
