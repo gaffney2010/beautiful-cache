@@ -22,7 +22,7 @@ class Database(object):
         pass
 
     # TODO: Should I return a success message or something?
-    def _append(self, policy: Policy, id: str, ts: Time) -> None:
+    def _append(self, policy: Policy, id: Id, ts: Time) -> None:
         raise NotImplementedError
 
     # TODO: What other methods are needed?
@@ -57,7 +57,7 @@ class PolicyEngine(object):
     file_system: FileSystem = attr.ib()
     clock: Clock = attr.ib()
 
-    def append(self, policy: Policy, id: str) -> None:
+    def append(self, policy: Policy, id: Id) -> None:
         """Append to database with current time."""
         self.database._append(policy, id, self.clock.now())
 
@@ -77,7 +77,7 @@ class CacheTag(object):
 
         self.root = False
 
-        self._id = None
+        self._id: Id = None
 
     # TODO: Make a CacheTagList object that we allow to materialize all at once.
     def find_all(self, *args, **kwargs) -> List["CacheTag"]:
@@ -98,12 +98,11 @@ class CacheTag(object):
 
         return self.tag
 
-    # TODO: Make ID type
-    def _calc_id(self) -> str:
+    def _calc_id(self) -> Id:
         # TODO: Replace with full ID
         return self.tag.name
 
-    def id(self) -> str:
+    def id(self) -> Id:
         if self._id is not None:
             return self._id
 

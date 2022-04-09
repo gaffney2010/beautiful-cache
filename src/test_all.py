@@ -29,7 +29,7 @@ class MockUrlReader(bc.UrlReader):
 
 class MockDatabase(bc.Database):
     def __init__(self):
-        self.db: Dict[Tuple[str, str], Time] = dict()
+        self.db: Dict[Tuple[Policy, str], Time] = dict()
         super().__init__()
 
     def _append(self, policy: Policy, id: str, ts: Time) -> None:
