@@ -9,7 +9,7 @@ from shared_types import *
 
 # Make functionless mocks.  This will all get replaced later.
 class DeadDatabase(bc.Database):
-    def append(self, row: Row) -> None:
+    def _append(self, policy: Policy, id: str, ts: Time) -> None:
         pass
 
 
@@ -28,7 +28,7 @@ class MockUrlReader(bc.UrlReader):
         self.internet = internet
         super().__init__()
 
-    def read(self, url: Url) -> Html:
+    def _read(self, url: Url) -> Html:
         return self.internet[url]
 
 
