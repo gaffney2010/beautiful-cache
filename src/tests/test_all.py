@@ -49,7 +49,7 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(link3["href"], "row2.png")
 
         # Check that a cached version of the library has been saved.
-        self.assertDictEqual(engine.file_system.files, {"test_url": example_html})
+        self.assertDictEqual(engine.file_system.files, {"test_url.data": example_html})
 
         # Check that three Request records have been added to the db.  One for the
         #  URL load, and one for each request record.

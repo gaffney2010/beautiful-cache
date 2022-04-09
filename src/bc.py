@@ -32,6 +32,9 @@ class FileSystem(object):
     def __init__(self):
         pass
 
+    def key(self, url: Url) -> Filename:
+        return Filename(url.replace("/", "") + ".data")
+
     def read(self, fn: Filename) -> str:
         raise NotImplementedError
 
@@ -63,9 +66,16 @@ class PolicyEngine(object):
 
     def read_url(self, url: Url, policy: Policy) -> Html:
         """Reads url, saving an access record to the database at the same time."""
-        html = self.url_reader._read(url)
-        self.append(policy, Id(""))  # Store the root
-        return html
+        fn = self.file_system.key(url)
+
+        if self.file_system.exists(fn):
+            return Html(self.file_system.read(fn))
+
+        result = self.url_reader._read(url)
+        self.append(policy, Id(""))  # Store the root in Requests db
+        self.file_system.write(fn, result)  # Save
+
+        return result
 
 
 class CacheTag(object):
@@ -128,19 +138,6 @@ class CacheTag(object):
         return self._id
 
 
-# TODO: Move this logic into read_url, since they should always happen together.
-def cached_read(url: Url, policy: Policy, engine: PolicyEngine) -> Html:
-    # TODO: Need to sanitize URLs into keys somehow.
-    fn = Filename(url)
-
-    if engine.file_system.exists(url):
-        return Html(engine.file_system.read(url))
-
-    result = engine.read_url(url, policy)
-    engine.file_system.write(url, result)
-    return result
-
-
 class BeautifulCache(CacheTag):
     def __init__(self, url: Url, policy: Policy, engine: PolicyEngine):
         self.url = url
@@ -148,7 +145,7 @@ class BeautifulCache(CacheTag):
         # TODO: Default engine if not specified.  Make input param Optional then.
         self.engine = engine
 
-        html = cached_read(self.url, self.policy, engine=engine)
+        html = engine.read_url(self.url, self.policy)
         soup = bs4.BeautifulSoup(html, features="lxml")
 
         super().__init__(soup, self.policy, self.engine)
