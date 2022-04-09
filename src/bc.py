@@ -48,7 +48,6 @@ class Clock(object):
 
     def now(self) -> Time:
         raise NotImplementedError
-    
 
 
 @attr.s()
@@ -75,7 +74,7 @@ class CacheTag(object):
     def materialize(self) -> bs4.element.Tag:
         if self.tag is None:
             raise BcException("No tag to materialize")
-        
+
         return self.tag
 
 

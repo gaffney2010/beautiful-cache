@@ -42,7 +42,7 @@ class MockFileSystem(bc.FileSystem):
             result = self.files[fn]
         except KeyError:
             raise BcException(f"Trying to read mock file that doesn't exist: {fn}")
-        
+
         return result
 
     def write(self, fn: str, content: str) -> None:
@@ -54,7 +54,7 @@ class MockFileSystem(bc.FileSystem):
 
 class PolicyEngineGenerator(object):
     """Will create a new mock PolicyEngine on build()
-    
+
     Should include a mock file system, a mock Requests database, a mock webdriver, and a mock clock.
     """
 
@@ -113,4 +113,3 @@ class TestStringMethods(unittest.TestCase):
         self.assertDictEqual(engine.file_system.files, {"test_url": example_html})
 
         # TODO: Assert DB records entered
-
