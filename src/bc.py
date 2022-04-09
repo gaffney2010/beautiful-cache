@@ -32,13 +32,13 @@ class FileSystem(object):
     def __init__(self):
         pass
 
-    def read(self, fn: str) -> str:
+    def read(self, fn: Filename) -> str:
         raise NotImplementedError
 
-    def write(self, fn: str, content: str) -> None:
+    def write(self, fn: Filename, content: str) -> None:
         raise NotImplementedError
 
-    def exists(self, fn: str) -> bool:
+    def exists(self, fn: Filename) -> bool:
         raise NotImplementedError
 
 
@@ -128,8 +128,11 @@ class CacheTag(object):
         return self._id
 
 
+# TODO: Move this logic into read_url, since they should always happen together.
 def cached_read(url: Url, policy: Policy, engine: PolicyEngine) -> Html:
     # TODO: Need to sanitize URLs into keys somehow.
+    fn = Filename(url)
+
     if engine.file_system.exists(url):
         return Html(engine.file_system.read(url))
 

@@ -25,10 +25,9 @@ class MockDatabase(bc.Database):
 
 class MockFileSystem(bc.FileSystem):
     def __init__(self):
-        # TODO: Make type for file name
-        self.files: Dict[str, str] = dict()
+        self.files: Dict[Filename, str] = dict()
 
-    def read(self, fn: str) -> str:
+    def read(self, fn: Filename) -> str:
         try:
             result = self.files[fn]
         except KeyError:
@@ -36,10 +35,10 @@ class MockFileSystem(bc.FileSystem):
 
         return result
 
-    def write(self, fn: str, content: str) -> None:
+    def write(self, fn: Filename, content: str) -> None:
         self.files[fn] = content
 
-    def exists(self, fn: str) -> bool:
+    def exists(self, fn: Filename) -> bool:
         return fn in self.files
 
 
