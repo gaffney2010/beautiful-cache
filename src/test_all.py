@@ -5,20 +5,11 @@ import bs4
 
 import bc
 from shared_types import *
-from src.bc import UrlReader
 
 
 # Make functionless mocks.  This will all get replaced later.
 class DeadDatabase(bc.Database):
     def append(self, row: Row) -> None:
-        pass
-
-
-class DeadFileSystem(bc.FileSystem):
-    def read(self, fn: str) -> str:
-        return ""
-
-    def write(self, fn: str, content: str) -> None:
         pass
 
 
@@ -32,13 +23,33 @@ class DeadClock(bc.Clock):
 
 
 # Takes a dict at init time.
-class MockUrlReader(UrlReader):
+class MockUrlReader(bc.UrlReader):
     def __init__(self, internet: Dict[Url, Html]):
         self.internet = internet
         super().__init__()
 
     def read(self, url: Url) -> Html:
         return self.internet[url]
+
+
+class MockFileSystem(bc.FileSystem):
+    def __init__(self):
+        # TODO: Make type for file name
+        self.files: Dict[str, str] = dict()
+
+    def read(self, fn: str) -> str:
+        try:
+            result = self.files[fn]
+        except KeyError:
+            raise BcException(f"Trying to read mock file that doesn't exist: {fn}")
+        
+        return result
+
+    def write(self, fn: str, content: str) -> None:
+        self.files[fn] = content
+
+    def exists(self, fn: str) -> bool:
+        return fn in self.files
 
 
 class PolicyEngineGenerator(object):
@@ -58,7 +69,7 @@ class PolicyEngineGenerator(object):
         return bc.PolicyEngine(
             url_reader=MockUrlReader(self.internet),
             database=DeadDatabase(),
-            file_system=DeadFileSystem(),
+            file_system=MockFileSystem(),
             clock=DeadClock(),
         )
 
@@ -98,6 +109,8 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(link0["href"], "row1.png")
         self.assertEqual(link3["href"], "row2.png")
 
-        # TODO: Assert that mock file has been written.
+        # Check that a cached version of the library has been saved.
+        self.assertDictEqual(engine.file_system.files, {"test_url": example_html})
+
         # TODO: Assert DB records entered
 

@@ -38,6 +38,9 @@ class FileSystem(object):
     def write(self, fn: str, content: str) -> None:
         raise NotImplementedError
 
+    def exists(self, fn: str) -> bool:
+        raise NotImplementedError
+
 
 class Clock(object):
     def __init__(self):
@@ -76,6 +79,16 @@ class CacheTag(object):
         return self.tag
 
 
+def cached_read(url: Url, engine: PolicyEngine) -> Html:
+    # TODO: Need to sanitize URLs into keys somehow.
+    if engine.file_system.exists(url):
+        return engine.file_system.read(url)
+
+    result = engine.url_reader.read(url)
+    engine.file_system.write(url, result)
+    return result
+
+
 class BeautifulCache(CacheTag):
     def __init__(self, url: Url, policy: Policy, engine: Optional[PolicyEngine] = None):
         self.url = url
@@ -83,7 +96,7 @@ class BeautifulCache(CacheTag):
         # TODO: Default engine if not specified.
         self.engine = engine
 
-        html = self.engine.url_reader.read(self.url)
+        html = cached_read(self.url, engine=engine)
         soup = bs4.BeautifulSoup(html, features="lxml")
 
         super().__init__(soup)
