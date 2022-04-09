@@ -74,8 +74,8 @@ class TestStringMethods(unittest.TestCase):
             <td>row: 1, <a href="row1.png">cell:2</a></td>
         </tr>
         <tr>
-            <td>row: 2, <a href="row1.png">cell:1</a></td>
-            <td>row: 2, <a href="row1.png">cell:2</a></td>
+            <td>row: 2, <a href="row2.png">cell:1</a></td>
+            <td>row: 2, <a href="row2.png">cell:2</a></td>
         </tr>
         </table>
         </body</html>
@@ -94,7 +94,8 @@ class TestStringMethods(unittest.TestCase):
         self.assertTrue(isinstance(link3, bs4.element.Tag))
         self.assertEqual(link0.string, "cell:1")
         self.assertEqual(link3.string, "cell:2")
-        # TODO: Assert links have expected hrefs
+        self.assertEqual(link0["href"], "row1.png")
+        self.assertEqual(link3["href"], "row2.png")
 
         # TODO: Assert that mock file has been written.
         # TODO: Assert DB records entered
