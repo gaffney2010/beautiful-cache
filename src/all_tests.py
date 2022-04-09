@@ -1,13 +1,42 @@
 # TODO: Rename file (?) and set up testing make command.
 
+from typing import Dict
 import unittest
 
-# TODO: Make package for bc
-import beautifulcache as bc
+import bc
 
 
-Html = str
-Url = str
+# Make functionless mocks.  This will all get replaced later.
+class DeadDatabase(bc.Database):
+    def append(self, row: bc.Row) -> None:
+        pass
+
+
+class DeadFileSystem(bc.FileSystem):
+    def read(self, fn: str) -> str:
+        return ""
+
+    def write(self, fn: str, content: str) -> None:
+        pass
+
+
+class DeadClock(bc.Clock):
+    def __init__(self):
+        pass
+
+    def now(self) -> bc.Time:
+        """Even a broken clock is right exactly once in 1970."""
+        return 0
+
+
+# Takes a dict at init time.
+class UrlReader(object):
+    def __init__(self, internet: Dict[bc.Url, bc.Html]):
+        self.internet = internet
+        super().__init__()
+
+    def read(self, url: bc.Url) -> bc.Html:
+        return self.internet[url]
 
 
 class PolicyEngineGenerator(object):
@@ -17,16 +46,18 @@ class PolicyEngineGenerator(object):
     """
 
     def __init__(self):
-        pass
+        self.internet: Dict[bc.Url, bc.Html] = dict()
 
-    def add_website(self, url: Url, html: Html) -> None:
-        # TODO: Implement
-        raise NotImplementedError
+    def add_website(self, url: bc.Url, html: bc.Html) -> None:
+        self.internet[url] = html
 
-    # TODO: Make PolicyEngine
     def build(self) -> bc.PolicyEngine:
-        # TODO: Implement
-        raise NotImplementedError
+        bc.PolicyEngine(
+            url_reader=UrlReader(self.internet),
+            database=DeadDatabase(),
+            file_system=DeadFileSystem(),
+            clock=DeadClock(),
+        )
 
 
 class TestStringMethods(unittest.TestCase):
