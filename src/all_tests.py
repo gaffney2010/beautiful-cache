@@ -82,7 +82,6 @@ class TestStringMethods(unittest.TestCase):
         engine = PolicyEngineGenerator().add_website("test_url", example_html).build()
 
         # Should be able to inject engines like this
-        # TODO: Make BeautifulCache object
         soup = bc.BeautifulCache("test_url", "test_policy", engine=engine)
         cells = soup.find_all("td")
         # The materialize returns the usual BeautifulSoup objects.
@@ -94,4 +93,5 @@ class TestStringMethods(unittest.TestCase):
         # TODO: Assert links have expected hrefs
 
         # TODO: Assert that mock file has been written.
+        # TODO: Assert DB records entered
 

@@ -1,12 +1,13 @@
 """We start with all the code in one file, but this will evolve later."""
 
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 
 import attr
 
 
 # TODO: Use shared_types paradigm.  Sooner would be great!
 Html = str
+Policy = str
 Url = str
 # TODO: What is this?  Ms since epoch?
 Time = int
@@ -59,3 +60,30 @@ class PolicyEngine(object):
     database: Database = attr.ib()
     file_system: FileSystem = attr.ib()
     clock: Clock = attr.ib()
+
+
+class CacheTag(object):
+    def __init__(self):
+        self.root = False
+
+    def find_all(self, *args, **kwargs) -> "CacheTag":
+        # TODO: Implement
+        raise NotImplementedError
+
+    def find(*args, **kwargs) -> "CacheTag":
+        # TODO: Implement
+        raise NotImplementedError
+
+    # TODO: You know...
+    # def materialize(self)
+
+
+class BeautifulCache(CacheTag):
+    def __init__(self, url: Url, policy: Policy, engine: Optional[PolicyEngine] = None):
+        self.url = url
+        self.policy = policy
+        # TODO: Default engine if not specified.
+        self.engine = engine
+
+        super().__init__()
+        self.root = True
