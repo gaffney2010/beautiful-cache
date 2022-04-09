@@ -1,6 +1,8 @@
 # beautiful-cache
 Caching Wrapper for BeautifulSoup.
 
+TODO: Add some overview about compaction.
+
 Work in progress - the below isn't implemented yet.
 
 ## Policy

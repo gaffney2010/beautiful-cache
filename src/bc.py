@@ -3,6 +3,7 @@
 from typing import Optional
 
 import attr
+import bs4
 
 from shared_types import *
 
@@ -56,19 +57,22 @@ class PolicyEngine(object):
 
 
 class CacheTag(object):
-    def __init__(self):
+    # TODO: `tag` may be soup
+    def __init__(self, tag: bs4.element.Tag):
         self.root = False
+        self.tag = tag
 
     def find_all(self, *args, **kwargs) -> "CacheTag":
-        # TODO: Implement
-        raise NotImplementedError
+        return CacheTag(self.tag.find_all(args, kwargs))
 
-    def find(*args, **kwargs) -> "CacheTag":
-        # TODO: Implement
-        raise NotImplementedError
+    def find(self, *args, **kwargs) -> "CacheTag":
+        return CacheTag(self.tag.find(args, kwargs))
 
-    # TODO: You know...
-    # def materialize(self)
+    def materialize(self) -> bs4.element.Tag:
+        if self.tag is None:
+            raise BcException("No tag to materialize")
+        
+        return self.tag
 
 
 class BeautifulCache(CacheTag):
@@ -78,5 +82,8 @@ class BeautifulCache(CacheTag):
         # TODO: Default engine if not specified.
         self.engine = engine
 
-        super().__init__()
+        html = self.engine.url_reader.read(self.url)
+        soup = bs4.BeautifulSoup(html, features="lxml")
+
+        super().__init__(soup)
         self.root = True
