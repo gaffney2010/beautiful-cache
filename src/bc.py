@@ -1,6 +1,6 @@
 """We start with all the code in one file, but this will evolve later."""
 
-from typing import Optional
+from typing import List, Optional
 
 import attr
 import bs4
@@ -62,8 +62,9 @@ class CacheTag(object):
         self.root = False
         self.tag = tag
 
-    def find_all(self, *args, **kwargs) -> "CacheTag":
-        return CacheTag(self.tag.find_all(args, kwargs))
+    # TODO: Make a CacheTagList object that we allow to materialize all at once.
+    def find_all(self, *args, **kwargs) -> List["CacheTag"]:
+        return [CacheTag(t) for t in self.tag.find_all(args, kwargs)]
 
     def find(self, *args, **kwargs) -> "CacheTag":
         return CacheTag(self.tag.find(args, kwargs))

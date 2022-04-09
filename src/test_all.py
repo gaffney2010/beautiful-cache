@@ -49,11 +49,12 @@ class PolicyEngineGenerator(object):
     def __init__(self):
         self.internet: Dict[Url, Html] = dict()
 
-    def add_website(self, url: Url, html: Html) -> None:
+    def add_website(self, url: Url, html: Html) -> "PolicyEngineGenerator":
         self.internet[url] = html
+        return self
 
     def build(self) -> bc.PolicyEngine:
-        bc.PolicyEngine(
+        return bc.PolicyEngine(
             url_reader=UrlReader(self.internet),
             database=DeadDatabase(),
             file_system=DeadFileSystem(),
@@ -90,7 +91,8 @@ class TestStringMethods(unittest.TestCase):
         link3 = cells[3].find("a").materialize()
 
         # TODO: Assert links are BS tag types
-        # TODO: Assert links have expected content
+        self.assertEqual(link0.string, "cell:1")
+        self.assertEqual(link3.string, "cell:2")
         # TODO: Assert links have expected hrefs
 
         # TODO: Assert that mock file has been written.
