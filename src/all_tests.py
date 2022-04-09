@@ -3,7 +3,7 @@
 import unittest
 
 # TODO: Make package for bc
-import bc
+import beautifulcache as bc
 
 
 Html = str
