@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Tuple
 import unittest
 
 import bs4
@@ -8,11 +8,6 @@ from shared_types import *
 
 
 # Make functionless mocks.  This will all get replaced later.
-class DeadDatabase(bc.Database):
-    def _append(self, policy: Policy, id: str, ts: Time) -> None:
-        pass
-
-
 class DeadClock(bc.Clock):
     def __init__(self):
         pass
@@ -30,6 +25,15 @@ class MockUrlReader(bc.UrlReader):
 
     def _read(self, url: Url) -> Html:
         return self.internet[url]
+
+
+class MockDatabase(bc.Database):
+    def __init__(self):
+        self.db: Dict[Tuple[str, str], Time] = dict()
+        super().__init__()
+
+    def _append(self, policy: Policy, id: str, ts: Time) -> None:
+        self.db[(policy, id)] = ts
 
 
 class MockFileSystem(bc.FileSystem):
@@ -68,7 +72,7 @@ class PolicyEngineGenerator(object):
     def build(self) -> bc.PolicyEngine:
         return bc.PolicyEngine(
             url_reader=MockUrlReader(self.internet),
-            database=DeadDatabase(),
+            database=MockDatabase(),
             file_system=MockFileSystem(),
             clock=DeadClock(),
         )
@@ -112,4 +116,14 @@ class TestStringMethods(unittest.TestCase):
         # Check that a cached version of the library has been saved.
         self.assertDictEqual(engine.file_system.files, {"test_url": example_html})
 
-        # TODO: Assert DB records entered
+        # Check that three Request records have been added to the db.  One for the
+        #  URL load, and one for each request record.
+        self.assertDictEqual(
+            engine.database.db,
+            {
+                ("test_policy", ""): 0,
+                ("test_policy", "a"): 0,
+                # There will be a third row when I fix my id logic.
+                # ("test_policy", ""): 0,
+            },
+        )
