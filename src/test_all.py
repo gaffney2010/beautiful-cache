@@ -126,8 +126,7 @@ class TestStringMethods(unittest.TestCase):
             engine.database.db,
             {
                 (Policy("test_policy"), Id("")): 0,
-                (Policy("test_policy"), Id("a")): 0,
-                # There will be a third row when I fix my id logic.
-                # ("test_policy", ""): 0,
+                (Policy("test_policy"), Id("html:0/body:0/table:0/tr:0/td:0/a:0")): 0,
+                (Policy("test_policy"), Id("html:0/body:0/table:0/tr:1/td:1/a:0")): 0,
             },
         )

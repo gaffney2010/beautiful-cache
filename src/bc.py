@@ -75,6 +75,7 @@ class CacheTag(object):
         self.policy = policy
         self.engine = engine
 
+        # TODO: I don't think this gets used.
         self.root = False
 
         self._id: Optional[Id] = None
@@ -99,8 +100,25 @@ class CacheTag(object):
         return self.tag
 
     def _calc_id(self) -> Id:
-        # TODO: Replace with full ID
-        return self.tag.name
+        result = list()
+
+        vertical_cursor = self.tag
+        while vertical_cursor.name != "[document]":
+            name = vertical_cursor.name
+            i = 0
+
+            horizontal_cursor = vertical_cursor
+            while horizontal_cursor is not None:
+                horizontal_cursor = horizontal_cursor.previous_sibling
+                # Don't count the first time
+                if horizontal_cursor and horizontal_cursor.name == name:
+                    i += 1
+
+            this_entry = f"{name}:{i}"
+            result.append(this_entry)
+            vertical_cursor = vertical_cursor.parent
+
+        return Id("/".join(reversed(result)))
 
     def id(self) -> Id:
         if self._id is not None:
