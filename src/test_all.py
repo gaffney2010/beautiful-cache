@@ -8,13 +8,6 @@ from shared_types import *
 
 
 # Make functionless mocks.  This will all get replaced later.
-class DeadClock(bc.Clock):
-    def __init__(self):
-        pass
-
-    def now(self) -> Time:
-        """Even a broken clock is right exactly once in 1970."""
-        return Time(0)
 
 
 # Takes a dict at init time.
@@ -56,6 +49,18 @@ class MockFileSystem(bc.FileSystem):
         return fn in self.files
 
 
+class MockClock(bc.Clock):
+    def __init__(self):
+        self.clock = Time(0)
+        super().__init__()
+
+    def tick(self, secs: Time = Time(1)) -> None:
+        self.clock += secs
+
+    def now(self) -> Time:
+        return self.clock
+
+
 class PolicyEngineGenerator(object):
     """Will create a new mock PolicyEngine on build()
 
@@ -74,7 +79,7 @@ class PolicyEngineGenerator(object):
             url_reader=MockUrlReader(self.internet),
             database=MockDatabase(),
             file_system=MockFileSystem(),
-            clock=DeadClock(),
+            clock=MockClock(),
         )
 
 
@@ -107,7 +112,9 @@ class TestStringMethods(unittest.TestCase):
         soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
         cells = soup.find_all("td")
         # The materialize returns the usual BeautifulSoup objects.
+        engine.clock.tick()
         link0 = cells[0].find("a").materialize()
+        engine.clock.tick()
         link3 = cells[3].find("a").materialize()
 
         self.assertTrue(isinstance(link0, bs4.element.Tag))
@@ -126,7 +133,8 @@ class TestStringMethods(unittest.TestCase):
             engine.database.db,
             {
                 (Policy("test_policy"), Id("")): 0,
-                (Policy("test_policy"), Id("html:0/body:0/table:0/tr:0/td:0/a:0")): 0,
-                (Policy("test_policy"), Id("html:0/body:0/table:0/tr:1/td:1/a:0")): 0,
+                # Timestamps determined by the number of clicks that have passed.
+                (Policy("test_policy"), Id("html:0/body:0/table:0/tr:0/td:0/a:0")): 1,
+                (Policy("test_policy"), Id("html:0/body:0/table:0/tr:1/td:1/a:0")): 2,
             },
         )
