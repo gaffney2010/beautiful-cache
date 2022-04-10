@@ -91,11 +91,11 @@ class CacheTag(object):
     def find_all(self, *args, **kwargs) -> List["CacheTag"]:
         return [
             CacheTag(t, self.policy, self.engine)
-            for t in self.tag.find_all(args, kwargs)
+            for t in self.tag.find_all(*args, **kwargs)
         ]
 
     def find(self, *args, **kwargs) -> "CacheTag":
-        return CacheTag(self.tag.find(args, kwargs), self.policy, self.engine)
+        return CacheTag(self.tag.find(*args, **kwargs), self.policy, self.engine)
 
     def materialize(self) -> bs4.element.Tag:
         if self.tag is None:
@@ -133,6 +133,9 @@ class CacheTag(object):
 
         self._id = self._calc_id()
         return self._id
+
+    def __str__(self) -> str:
+        return str(self.tag)
 
 
 class BeautifulCache(CacheTag):
