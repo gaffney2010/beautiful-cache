@@ -64,8 +64,8 @@ class TestEndToEnd(unittest.TestCase):
         )
 
     def test_uses_cache(self):
-        old_html = "<tag>OLD</tag>"
-        new_html = Html("<tag>NEW</tag>")
+        old_html = "<html><body><tag>OLD</tag></body></html>"
+        new_html = Html("<html><body><tag>NEW</tag></body></html>")
 
         engine = (
             PolicyEngineGenerator()
@@ -76,6 +76,14 @@ class TestEndToEnd(unittest.TestCase):
 
         soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
         self.assertEqual(soup.find("tag").materialize().string, "OLD")
+
+        # Shouldn't have a request for the root, because I didn't reload.
+        self.assertDictEqual(
+            engine.database.db,
+            {
+                (Policy("test_policy"), Id("html:0/body:0/tag:0")): 0,
+            },
+        )
 
     def test_reloads_on_missing_component_with_success(self):
         pass
