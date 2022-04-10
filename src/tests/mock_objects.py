@@ -1,4 +1,4 @@
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 import bc
 from shared_types import *
@@ -6,8 +6,10 @@ from shared_types import *
 
 # Takes a dict at init time.
 class MockUrlReader(bc.UrlReader):
-    def __init__(self, internet: Dict[Url, Html]):
+    def __init__(self, internet: Optional[Dict[Url, Html]] = None):
         self.internet = internet
+        if self.internet is None:
+            self.interest = dict()
         super().__init__()
 
     def _read(self, url: Url) -> Html:
@@ -24,8 +26,11 @@ class MockDatabase(bc.Database):
 
 
 class MockFileSystem(bc.FileSystem):
-    def __init__(self):
-        self.files: Dict[Filename, str] = dict()
+    def __init__(self, files: Optional[Dict[Filename, str]] = None):
+        self.files = files
+        if self.files is None:
+            self.files = dict()
+        super().__init__()
 
     def read(self, fn: Filename) -> str:
         try:
@@ -62,15 +67,20 @@ class PolicyEngineGenerator(object):
 
     def __init__(self):
         self.internet: Dict[Url, Html] = dict()
+        self.files: Dict[Filename, str] = dict()
 
     def add_website(self, url: Url, html: Html) -> "PolicyEngineGenerator":
         self.internet[url] = html
+        return self
+
+    def add_file(self, fn: Filename, text: str) -> "PolicyEngineGenerator":
+        self.files[fn] = text
         return self
 
     def build(self) -> bc.PolicyEngine:
         return bc.PolicyEngine(
             url_reader=MockUrlReader(self.internet),
             database=MockDatabase(),
-            file_system=MockFileSystem(),
+            file_system=MockFileSystem(self.files),
             clock=MockClock(),
         )

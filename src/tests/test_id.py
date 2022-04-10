@@ -6,7 +6,6 @@ from shared_types import *
 
 
 class TestEndToEnd(unittest.TestCase):
-
     def test_happy_path(self):
         pass
 

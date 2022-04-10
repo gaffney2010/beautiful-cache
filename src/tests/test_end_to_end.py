@@ -64,7 +64,18 @@ class TestEndToEnd(unittest.TestCase):
         )
 
     def test_uses_cache(self):
-        pass
+        old_html = "<tag>OLD</tag>"
+        new_html = Html("<tag>NEW</tag>")
+
+        engine = (
+            PolicyEngineGenerator()
+            .add_file("test_url.data", old_html)
+            .add_website("test_url", new_html)
+            .build()
+        )
+
+        soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
+        self.assertEqual(soup.find("tag").materialize().string, "OLD")
 
     def test_reloads_on_missing_component_with_success(self):
         pass
