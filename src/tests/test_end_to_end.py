@@ -7,7 +7,7 @@ from tests.mock_objects import *
 from shared_types import *
 
 
-class TestStringMethods(unittest.TestCase):
+class TestEndToEnd(unittest.TestCase):
 
     # No compaction
     def test_happy_path(self):
@@ -62,3 +62,16 @@ class TestStringMethods(unittest.TestCase):
                 (Policy("test_policy"), Id("html:0/body:0/table:0/tr:1/td:1/a:0")): 2,
             },
         )
+
+    def test_uses_cache(self):
+        pass
+
+    def test_reloads_on_missing_component_with_success(self):
+        pass
+
+    def test_reloads_on_missing_component_with_failure(self):
+        pass
+
+    # TODO: This needs to be done with a real db
+    # def test_upserts_overwrite(self):
+    #     pass

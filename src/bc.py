@@ -85,9 +85,6 @@ class CacheTag(object):
         self.policy = policy
         self.engine = engine
 
-        # TODO: I don't think this gets used.
-        self.root = False
-
         self._id: Optional[Id] = None
 
     # TODO: Make a CacheTagList object that we allow to materialize all at once.
@@ -149,4 +146,3 @@ class BeautifulCache(CacheTag):
         soup = bs4.BeautifulSoup(html, features="lxml")
 
         super().__init__(soup, self.policy, self.engine)
-        self.root = True
