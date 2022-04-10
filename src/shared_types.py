@@ -3,12 +3,15 @@ from typing import NewType
 import attr
 
 
+Bytes = NewType("Bytes", int)
 Filename = NewType("Filename", str)
 Html = NewType("Html", str)
 Id = NewType("Id", str)
 Policy = NewType("Policy", str)
 Time = NewType("Time", int)  # TODO: What is this?  Ms since epoch?
 Url = NewType("Url", str)
+
+# TODO: Consider making type for Tuple[Policy, Filename, Id]
 
 
 # Make a bunch of abstract base classes.
@@ -25,12 +28,15 @@ class Database(object):
         pass
 
     # TODO: Should I return a success message or something?
-    def _append(self, policy: Policy, id: Id, ts: Time) -> None:
+    def _append(self, policy: Policy, fn: Filename, id: Id, ts: Time) -> None:
         raise NotImplementedError
 
-    # TODO: What other methods are needed?
+    def size(self, policy: Policy) -> Bytes:
+        """Returns total size of all data files in policy."""
+        raise NotImplementedError
 
 
+# TODO: All these endpoints need to take policy somehow
 class FileSystem(object):
     def __init__(self):
         pass
@@ -56,6 +62,7 @@ class Clock(object):
         raise NotImplementedError
 
 
+# TODO: Should PolicyEngine hold the policy?
 @attr.s()
 class PolicyEngine(object):
     url_reader: UrlReader = attr.ib()
@@ -63,10 +70,11 @@ class PolicyEngine(object):
     file_system: FileSystem = attr.ib()
     clock: Clock = attr.ib()
 
-    def append(self, policy: Policy, id: Id) -> None:
+    def append(self, policy: Policy, fn: Filename, id: Id) -> None:
         """Append to database with current time."""
-        self.database._append(policy, id, self.clock.now())
+        self.database._append(policy, fn, id, self.clock.now())
 
+    # TODO: Put policy first.
     def read_url(self, url: Url, policy: Policy) -> Html:
         """Reads url, saving an access record to the database at the same time."""
         fn = self.file_system.key(url)
@@ -75,7 +83,8 @@ class PolicyEngine(object):
             return Html(self.file_system.read(fn))
 
         result = self.url_reader._read(url)
-        self.append(policy, Id(""))  # Store the root in Requests db
+        self.append(policy, fn, Id(""))  # Store the root in Requests db
+        # TODO: Load into soup and cast to str, to remove whitespace.
         self.file_system.write(fn, result)  # Save
 
         return result

@@ -7,11 +7,19 @@ import bs4  # type: ignore
 from shared_types import *
 
 
+# TODO: Should I make a policy/filename variable?
 class CacheTag(object):
     # TODO: `tag` may be soup
-    def __init__(self, tag: bs4.element.Tag, policy: Policy, engine: PolicyEngine):
+    def __init__(
+        self,
+        tag: bs4.element.Tag,
+        policy: Policy,
+        filename: Filename,
+        engine: PolicyEngine,
+    ):
         self.tag = tag
         self.policy = policy
+        self.filename = filename
         self.engine = engine
 
         self._id: Optional[Id] = None
@@ -19,19 +27,21 @@ class CacheTag(object):
     # TODO: Make a CacheTagList object that we allow to materialize all at once.
     def find_all(self, *args, **kwargs) -> List["CacheTag"]:
         return [
-            CacheTag(t, self.policy, self.engine)
+            CacheTag(t, self.policy, self.filename, self.engine)
             for t in self.tag.find_all(*args, **kwargs)
         ]
 
     def find(self, *args, **kwargs) -> "CacheTag":
-        return CacheTag(self.tag.find(*args, **kwargs), self.policy, self.engine)
+        return CacheTag(
+            self.tag.find(*args, **kwargs), self.policy, self.filename, self.engine
+        )
 
     def materialize(self) -> bs4.element.Tag:
         if self.tag is None:
             raise BcException("No tag to materialize")
 
         # Add a new access record everytime we access.
-        self.engine.append(self.policy, self.id())
+        self.engine.append(self.policy, self.filename, self.id())
 
         return self.tag
 
@@ -74,7 +84,10 @@ class BeautifulCache(CacheTag):
         # TODO: Default engine if not specified.  Make input param Optional then.
         self.engine = engine
 
+        # TODO: Better way to do this.
+        filename = self.engine.file_system.key(url)
+
         html = engine.read_url(self.url, self.policy)
         soup = bs4.BeautifulSoup(html, features="lxml")
 
-        super().__init__(soup, self.policy, self.engine)
+        super().__init__(soup, self.policy, filename, self.engine)

@@ -17,12 +17,14 @@ class MockUrlReader(bc.UrlReader):
 
 
 class MockDatabase(bc.Database):
-    def __init__(self):
-        self.db: Dict[Tuple[Policy, str], Time] = dict()
+    def __init__(self, db: Optional[Dict[Tuple[Policy, Filename, Id], Time]] = None):
+        self.db = db
+        if self.db is None:
+            self.db = dict()
         super().__init__()
 
-    def _append(self, policy: Policy, id: str, ts: Time) -> None:
-        self.db[(policy, id)] = ts
+    def _append(self, policy: Policy, fn: Filename, id: Id, ts: Time) -> None:
+        self.db[(policy, fn, id)] = ts
 
 
 class MockFileSystem(bc.FileSystem):
@@ -46,6 +48,10 @@ class MockFileSystem(bc.FileSystem):
     def exists(self, fn: Filename) -> bool:
         return fn in self.files
 
+    def size(self, policy: Policy) -> Bytes:
+        # Just count characters for tests.
+        return Bytes(sum(len(content) for content in self.files.values()))
+
 
 class MockClock(bc.Clock):
     def __init__(self):
@@ -68,6 +74,7 @@ class PolicyEngineGenerator(object):
     def __init__(self):
         self.internet: Dict[Url, Html] = dict()
         self.files: Dict[Filename, str] = dict()
+        self.db: Dict[Tuple[Policy, Filename, Id], Time] = dict()
 
     def add_website(self, url: Url, html: Html) -> "PolicyEngineGenerator":
         self.internet[url] = html
@@ -75,6 +82,12 @@ class PolicyEngineGenerator(object):
 
     def add_file(self, fn: Filename, text: str) -> "PolicyEngineGenerator":
         self.files[fn] = text
+        return self
+
+    def add_request(
+        self, policy: Policy, fn: Filename, id: Id, ts: Time
+    ) -> "PolicyEngineGenerator":
+        self.db[(policy, fn, id)] = ts
         return self
 
     def build(self) -> bc.PolicyEngine:

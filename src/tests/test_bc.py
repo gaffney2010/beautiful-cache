@@ -56,10 +56,18 @@ class TestEndToEnd(unittest.TestCase):
         self.assertDictEqual(
             engine.database.db,
             {
-                (Policy("test_policy"), Id("")): 0,
+                (Policy("test_policy"), Filename("test_url.data"), Id("")): 0,
                 # Timestamps determined by the number of clicks that have passed.
-                (Policy("test_policy"), Id("html:0/body:0/table:0/tr:0/td:0/a:0")): 1,
-                (Policy("test_policy"), Id("html:0/body:0/table:0/tr:1/td:1/a:0")): 2,
+                (
+                    Policy("test_policy"),
+                    Filename("test_url.data"),
+                    Id("html:0/body:0/table:0/tr:0/td:0/a:0"),
+                ): 1,
+                (
+                    Policy("test_policy"),
+                    Filename("test_url.data"),
+                    Id("html:0/body:0/table:0/tr:1/td:1/a:0"),
+                ): 2,
             },
         )
 
@@ -81,7 +89,11 @@ class TestEndToEnd(unittest.TestCase):
         self.assertDictEqual(
             engine.database.db,
             {
-                (Policy("test_policy"), Id("html:0/body:0/tag:0")): 0,
+                (
+                    Policy("test_policy"),
+                    Filename("test_url.data"),
+                    Id("html:0/body:0/tag:0"),
+                ): 0,
             },
         )
 
