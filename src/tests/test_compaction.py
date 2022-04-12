@@ -22,14 +22,9 @@ class TestCompaction(unittest.TestCase):
                 </div>
             </body>
             </html>"""
-        print("BEFORE")
-        print(html)
-        print("=========")
-        print()
 
         peg = PolicyEngineGenerator()
 
-        peg.add_file("f1.data", html)
         peg.add_file(
             "f2.data", "..."
         )  # Something to check existence if everything else deleted.
@@ -39,16 +34,28 @@ class TestCompaction(unittest.TestCase):
         peg.add_request("test_policy", "f1.data", "body:0/div:0/p:2", 2)
         peg.add_request("test_policy", "f2.data", "", 3)
 
-        return peg.build()
+        # TODO: I don't like processing after building...
+        engine = peg.build()
+        engine._trim_and_save_html("test_policy", html, "f1.data")  # Use function for trimming.
+        return engine
 
     def test_all_happy_path(self):
         # TODO:
         engine = self._setup_happy_paths()
-        print("AFTER")
-        print(engine.file_system.read("f1.data"))
-        print("=========")
-        print()
-        print(engine.file_system.size)
+        # Engine has size = 179 at this point.
+        
+        # Even a small trim will result in dropping the entire first file with the "all" strategy.
+        target_size = 150
+
+        compaction.compact("test_policy", settings={"max_bytes": target_size, "strategy": "all"})
+
+        self.assertDictEqual(engine.file_system, {
+            Filename("f2.data"): "...",
+        })
+        # TODO: Untype these in tests.
+        self.assertDictEqual(engine.file_system, {
+            (Policy("test_policy"), Filename("f2.data"), Id("")): Time(3),
+        })
 
     def test_fat_happy_path(self):
         # TODO:

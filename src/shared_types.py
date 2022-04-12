@@ -3,6 +3,8 @@ from typing import NewType
 import attr
 import bs4
 
+import tree_crawl
+
 
 Bytes = NewType("Bytes", int)
 Filename = NewType("Filename", str)
@@ -75,6 +77,14 @@ class PolicyEngine(object):
         """Append to database with current time."""
         self.database._append(policy, fn, id, self.clock.now())
 
+    def _trim_and_save_html(self, policy: Policy, html: Html, fn: Filename) -> Html:
+        """Trim and save to file system.  Return trimmed."""
+        soup = bs4.BeautifulSoup(html, features="lxml")
+        result = tree_crawl.trim(soup)
+
+        self.append(policy, fn, Id(""))  # Store the root in Requests db
+        self.file_system.write(fn, result)  # Save
+
     # TODO: Put policy first.
     def read_url(self, url: Url, policy: Policy) -> Html:
         """Reads url, saving an access record to the database at the same time."""
@@ -84,15 +94,9 @@ class PolicyEngine(object):
             return Html(self.file_system.read(fn))
 
         # Cast to soup then back, so as to erase whitespace
-        raw_result = self.url_reader._read(url)
-        soup = bs4.BeautifulSoup(raw_result, features="lxml")
-        result = soup.string
+        untrimmed_html = self.url_reader._read(url)
 
-        self.append(policy, fn, Id(""))  # Store the root in Requests db
-        # TODO: Load into soup and cast to str, to remove whitespace.
-        self.file_system.write(fn, result)  # Save
-
-        return result
+        return self._trim_and_save_html(policy, untrimmed_html, fn)
 
 
 class BcException(Exception):
