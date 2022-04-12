@@ -22,6 +22,10 @@ class TestCompaction(unittest.TestCase):
                 </div>
             </body>
             </html>"""
+        print("BEFORE")
+        print(html)
+        print("=========")
+        print()
 
         peg = PolicyEngineGenerator()
 
@@ -39,7 +43,12 @@ class TestCompaction(unittest.TestCase):
 
     def test_all_happy_path(self):
         # TODO:
-        pass
+        engine = self._setup_happy_paths()
+        print("AFTER")
+        print(engine.file_system.read("f1.data"))
+        print("=========")
+        print()
+        print(engine.file_system.size)
 
     def test_fat_happy_path(self):
         # TODO:

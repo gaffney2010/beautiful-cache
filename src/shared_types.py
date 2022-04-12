@@ -1,6 +1,7 @@
 from typing import NewType
 
 import attr
+import bs4
 
 
 Bytes = NewType("Bytes", int)
@@ -82,7 +83,11 @@ class PolicyEngine(object):
         if self.file_system.exists(fn):
             return Html(self.file_system.read(fn))
 
-        result = self.url_reader._read(url)
+        # Cast to soup then back, so as to erase whitespace
+        raw_result = self.url_reader._read(url)
+        soup = bs4.BeautifulSoup(raw_result, features="lxml")
+        result = soup.string
+
         self.append(policy, fn, Id(""))  # Store the root in Requests db
         # TODO: Load into soup and cast to str, to remove whitespace.
         self.file_system.write(fn, result)  # Save
