@@ -1,3 +1,7 @@
+import bs4
+
+from shared_types import *
+
 
 def _st_tag(ingredient) -> str:
     if ingredient.parent is None:
@@ -7,8 +11,9 @@ def _st_tag(ingredient) -> str:
     guts = [ingredient.name]
     for k, v in ingredient.attrs.items():
         attr_bits = [k]
+        # TODO: Test tag like <p div="d1 d2">
         if v:
-            attr_bits.append('"' + " ".join(v) + '"')
+            attr_bits.append(f'"{v}"')
         guts.append("=".join(attr_bits))
     middle = " ".join(guts)
     return f"<{middle}>"
@@ -36,7 +41,7 @@ def trim(ingredient) -> str:
             parts.append(trim(child))
         parts.append(_en_tag(ingredient))
         return "".join(parts)
-    
+
     # No children - replace many end spaces with a single space
     result = str(ingredient).replace("\n", " ")
     if result[0].isspace():
@@ -44,3 +49,8 @@ def trim(ingredient) -> str:
     if result[-1].isspace():
         result = f"{result.rstrip()} "
     return result
+
+
+def trim_html(html: Html) -> Html:
+    soup = bs4.BeautifulSoup(html, features="lxml")
+    return Html(trim(soup))

@@ -1,12 +1,14 @@
 import unittest
 
 import compaction
-from tests.mock_objects import *
+import policy_engine_class
 from shared_types import *
+import tree_crawl
+from tests.mock_objects import *
 
 
 class TestCompaction(unittest.TestCase):
-    def _setup_happy_paths(self) -> PolicyEngine:
+    def _setup_happy_paths(self) -> policy_engine_class.PolicyEngine:
         """For the first three tests, create the same HTML"""
         html = """
             <html>
@@ -25,6 +27,7 @@ class TestCompaction(unittest.TestCase):
 
         peg = PolicyEngineGenerator()
 
+        peg.add_file("f1.data", tree_crawl.trim_html(html))
         peg.add_file(
             "f2.data", "..."
         )  # Something to check existence if everything else deleted.
@@ -34,28 +37,33 @@ class TestCompaction(unittest.TestCase):
         peg.add_request("test_policy", "f1.data", "body:0/div:0/p:2", 2)
         peg.add_request("test_policy", "f2.data", "", 3)
 
-        # TODO: I don't like processing after building...
-        engine = peg.build()
-        engine._trim_and_save_html("test_policy", html, "f1.data")  # Use function for trimming.
-        return engine
+        return peg.build()
 
     def test_all_happy_path(self):
         # TODO:
         engine = self._setup_happy_paths()
         # Engine has size = 179 at this point.
-        
+
         # Even a small trim will result in dropping the entire first file with the "all" strategy.
         target_size = 150
 
-        compaction.compact("test_policy", settings={"max_bytes": target_size, "strategy": "all"})
+        compaction.compact(
+            "test_policy", settings={"max_bytes": target_size, "strategy": "all"}
+        )
 
-        self.assertDictEqual(engine.file_system, {
-            Filename("f2.data"): "...",
-        })
+        self.assertDictEqual(
+            engine.file_system,
+            {
+                Filename("f2.data"): "...",
+            },
+        )
         # TODO: Untype these in tests.
-        self.assertDictEqual(engine.file_system, {
-            (Policy("test_policy"), Filename("f2.data"), Id("")): Time(3),
-        })
+        self.assertDictEqual(
+            engine.file_system,
+            {
+                (Policy("test_policy"), Filename("f2.data"), Id("")): Time(3),
+            },
+        )
 
     def test_fat_happy_path(self):
         # TODO:

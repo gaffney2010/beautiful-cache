@@ -1,6 +1,7 @@
 from typing import Dict, Optional, Tuple
 
 import bc
+import policy_engine_class
 from shared_types import *
 
 
@@ -23,8 +24,8 @@ class MockDatabase(bc.Database):
             self.db = dict()
         super().__init__()
 
-    def _append(self, policy: Policy, fn: Filename, id: Id, ts: Time) -> None:
-        self.db[(policy, fn, id)] = ts
+    def _append(self, pfi: Pfi, ts: Time) -> None:
+        self.db[pfi] = ts
 
 
 class MockFileSystem(bc.FileSystem):
@@ -74,7 +75,7 @@ class PolicyEngineGenerator(object):
     def __init__(self):
         self.internet: Dict[Url, Html] = dict()
         self.files: Dict[Filename, str] = dict()
-        self.db: Dict[Tuple[Policy, Filename, Id], Time] = dict()
+        self.db: Dict[Pfi, Time] = dict()
 
     def add_website(self, url: Url, html: Html) -> "PolicyEngineGenerator":
         self.internet[url] = html
@@ -90,8 +91,8 @@ class PolicyEngineGenerator(object):
         self.db[(policy, fn, id)] = ts
         return self
 
-    def build(self) -> bc.PolicyEngine:
-        return bc.PolicyEngine(
+    def build(self) -> policy_engine_class.PolicyEngine:
+        return policy_engine_class.PolicyEngine(
             url_reader=MockUrlReader(self.internet),
             database=MockDatabase(),
             file_system=MockFileSystem(self.files),

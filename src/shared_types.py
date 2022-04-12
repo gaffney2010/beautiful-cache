@@ -1,9 +1,4 @@
-from typing import NewType
-
-import attr
-import bs4
-
-import tree_crawl
+from typing import Any, NewType, Tuple, Union
 
 
 Bytes = NewType("Bytes", int)
@@ -14,7 +9,14 @@ Policy = NewType("Policy", str)
 Time = NewType("Time", int)  # TODO: What is this?  Ms since epoch?
 Url = NewType("Url", str)
 
-# TODO: Consider making type for Tuple[Policy, Filename, Id]
+Pfi = Tuple[Policy, Filename, Id]
+
+
+def pfi(
+    policy: Union[Policy, str], filename: Union[Filename, str], id: Union[Id, str]
+) -> Pfi:
+    # Convenient wrapper, I sup'ose
+    return (Policy(policy), Filename(filename), Id(id))
 
 
 # Make a bunch of abstract base classes.
@@ -31,7 +33,7 @@ class Database(object):
         pass
 
     # TODO: Should I return a success message or something?
-    def _append(self, policy: Policy, fn: Filename, id: Id, ts: Time) -> None:
+    def _append(self, pfi: Pfi, ts: Time) -> None:
         raise NotImplementedError
 
     def size(self, policy: Policy) -> Bytes:
@@ -63,40 +65,6 @@ class Clock(object):
 
     def now(self) -> Time:
         raise NotImplementedError
-
-
-# TODO: Should PolicyEngine hold the policy?
-@attr.s()
-class PolicyEngine(object):
-    url_reader: UrlReader = attr.ib()
-    database: Database = attr.ib()
-    file_system: FileSystem = attr.ib()
-    clock: Clock = attr.ib()
-
-    def append(self, policy: Policy, fn: Filename, id: Id) -> None:
-        """Append to database with current time."""
-        self.database._append(policy, fn, id, self.clock.now())
-
-    def _trim_and_save_html(self, policy: Policy, html: Html, fn: Filename) -> Html:
-        """Trim and save to file system.  Return trimmed."""
-        soup = bs4.BeautifulSoup(html, features="lxml")
-        result = tree_crawl.trim(soup)
-
-        self.append(policy, fn, Id(""))  # Store the root in Requests db
-        self.file_system.write(fn, result)  # Save
-
-    # TODO: Put policy first.
-    def read_url(self, url: Url, policy: Policy) -> Html:
-        """Reads url, saving an access record to the database at the same time."""
-        fn = self.file_system.key(url)
-
-        if self.file_system.exists(fn):
-            return Html(self.file_system.read(fn))
-
-        # Cast to soup then back, so as to erase whitespace
-        untrimmed_html = self.url_reader._read(url)
-
-        return self._trim_and_save_html(policy, untrimmed_html, fn)
 
 
 class BcException(Exception):

@@ -4,6 +4,7 @@ from typing import List, Optional
 
 import bs4  # type: ignore
 
+import policy_engine_class
 from shared_types import *
 
 
@@ -15,7 +16,7 @@ class CacheTag(object):
         tag: bs4.element.Tag,
         policy: Policy,
         filename: Filename,
-        engine: PolicyEngine,
+        engine: policy_engine_class.PolicyEngine,
     ):
         self.tag = tag
         self.policy = policy
@@ -78,7 +79,9 @@ class CacheTag(object):
 
 
 class BeautifulCache(CacheTag):
-    def __init__(self, url: Url, policy: Policy, engine: PolicyEngine):
+    def __init__(
+        self, url: Url, policy: Policy, engine: policy_engine_class.PolicyEngine
+    ):
         self.url = url
         self.policy = policy
         # TODO: Default engine if not specified.  Make input param Optional then.
