@@ -48,10 +48,12 @@ class CacheTag(object):
 
     # TODO: Should this logic live in tree_crawl?
     def _calc_id(self) -> Id:
+        # TODO: Handle self.tag is None throughout.
         result = list()
 
         vertical_cursor = self.tag
-        while vertical_cursor.name != "[document]":
+        # TODO: Make a short function called top-level, so that we have consistent logic throughout.
+        while vertical_cursor.parent is not None:
             name = vertical_cursor.name
             i = 0
 

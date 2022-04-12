@@ -1,4 +1,4 @@
-import bs4
+import bs4  # type: ignore
 
 from shared_types import *
 
@@ -13,7 +13,10 @@ def _st_tag(ingredient) -> str:
         attr_bits = [k]
         # TODO: Test tag like <p div="d1 d2">
         if v:
-            attr_bits.append(f'"{v}"')
+            if isinstance(v, str):
+                # I don't know why this happens sometimes
+                v = [v]
+            attr_bits.append('"' + " ".join(v) + '"')
         guts.append("=".join(attr_bits))
     middle = " ".join(guts)
     return f"<{middle}>"

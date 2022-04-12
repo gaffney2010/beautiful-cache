@@ -3,20 +3,20 @@ from typing import Any, Dict
 from shared_types import *
 
 
-def compact_all(policy: Policy, settings: Dict[str:Any]) -> None:
+def compact_all(policy: Policy, settings: Dict[str, Any]) -> None:
     raise NotImplementedError
 
 
-def compact_fat(policy: Policy, settings: Dict[str:Any]) -> None:
+def compact_fat(policy: Policy, settings: Dict[str, Any]) -> None:
     raise NotImplementedError
 
 
-def compact_thin(policy: Policy, settings: Dict[str:Any]) -> None:
+def compact_thin(policy: Policy, settings: Dict[str, Any]) -> None:
     raise NotImplementedError
 
 
 # TODO: Return some kind of message.
-def compact(policy: Policy, settings: Dict[str:Any]) -> None:
+def compact(policy: Policy, settings: Dict[str, Any]) -> None:
     # TODO: Fill in settings blanks from yaml.
 
     for required_field in ("max_bytes", "strategy"):

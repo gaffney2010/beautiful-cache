@@ -32,7 +32,6 @@ class TestEndToEnd(unittest.TestCase):
         engine = (
             PolicyEngineGenerator().add_website(Url("test_url"), example_html).build()
         )
-        print(engine.url_reader.internet)
 
         # Should be able to inject engines like this
         soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
@@ -143,26 +142,26 @@ class TestIdEndToEnd(unittest.TestCase):
         self.assertEqual(z.id(), "html:0/body:0/x:0/y:1/z:0")
 
     # TODO: Fix
-    # def test_find_params(self):
-    #     example_html = Html(
-    #         """
-    #     <html><body>
-    #     <x>
-    #         <y>First y</y>
-    #         <y class="second">Second y <z>z</z></y>
-    #     </x>
-    #     </body</html>
-    #     """
-    #     )
+    def test_find_params(self):
+        example_html = Html(
+            """
+        <html><body>
+        <x>
+            <y>First y</y>
+            <y class="second">Second y <z>z</z></y>
+        </x>
+        </body</html>
+        """
+        )
 
-    #     engine = (
-    #         PolicyEngineGenerator().add_website(Url("test_url"), example_html).build()
-    #     )
+        engine = (
+            PolicyEngineGenerator().add_website(Url("test_url"), example_html).build()
+        )
 
-    #     soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
-    #     y2 = soup.find("y", {"class": "second"})
+        soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
+        y2 = soup.find("y", {"class": "second"})
 
-    #     self.assertEqual(y2.id(), "html:0/body:0/x:0/y:1")
+        self.assertEqual(y2.id(), "html:0/body:0/x:0/y:1")
 
     # def test_cache(self):
     #     example_html = Html(
