@@ -46,6 +46,7 @@ class CacheTag(object):
 
         return self.tag
 
+    # TODO: Should this logic live in tree_crawl?
     def _calc_id(self) -> Id:
         result = list()
 
