@@ -24,7 +24,6 @@ class PolicyEngine(object):
     def append(self, policy: Policy, url: Url, id: Id) -> None:
         self.append(pui(policy, url, id))
 
-    # TODO: Put policy first.
     def read_url(self, policy: Policy, url: Url) -> Html:
         """Reads url, saving an access record to the database at the same time."""
         if self.file_system.exists(policy, url):
