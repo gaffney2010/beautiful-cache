@@ -58,3 +58,23 @@ def trim(ingredient) -> str:
 def trim_html(html: Html) -> Html:
     soup = bs4.BeautifulSoup(html, features="lxml")
     return Html(trim(soup))
+
+
+def isolate_id(html: Html, id: Id) -> Html:
+    # TODO: Make a global id valid checker
+
+    def _isolate(working_ingredient: str, id_split: List[str], ind: int) -> str:
+        if ind == len(id_split):
+            return trim(working_ingredient)
+
+        # Find the right ingredient
+        tag, i = id_split[ind].split(":")
+        working_ingredient = working_ingredient.find_all(tag)[i]
+        return (
+            _st_tag(working_ingredient)
+            + _isolate(working_ingredient, id_split, ind + 1)
+            + _en_tag(working_ingredient)
+        )
+
+    soup = bs4.BeautifulSoup(html, features="lxml")
+    return Html(_isolate(soup, id.split("/"), 0))

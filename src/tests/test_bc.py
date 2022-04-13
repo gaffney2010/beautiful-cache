@@ -29,9 +29,7 @@ class TestEndToEnd(unittest.TestCase):
         """
         )
 
-        engine = (
-            BcEngineGenerator().add_website(Url("test_url"), example_html).build()
-        )
+        engine = BcEngineGenerator().add_website(Url("test_url"), example_html).build()
 
         # Should be able to inject engines like this
         soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
@@ -122,9 +120,7 @@ class TestIdEndToEnd(unittest.TestCase):
         """
         )
 
-        engine = (
-            BcEngineGenerator().add_website(Url("test_url"), example_html).build()
-        )
+        engine = BcEngineGenerator().add_website(Url("test_url"), example_html).build()
 
         soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
         x = soup.find("x")
@@ -149,9 +145,7 @@ class TestIdEndToEnd(unittest.TestCase):
         """
         )
 
-        engine = (
-            BcEngineGenerator().add_website(Url("test_url"), example_html).build()
-        )
+        engine = BcEngineGenerator().add_website(Url("test_url"), example_html).build()
 
         soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
         y2 = soup.find("y", {"class": "second"})
@@ -167,9 +161,7 @@ class TestIdEndToEnd(unittest.TestCase):
         """
         )
 
-        engine = (
-            BcEngineGenerator().add_website(Url("test_url"), example_html).build()
-        )
+        engine = BcEngineGenerator().add_website(Url("test_url"), example_html).build()
 
         soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
         x = soup.find("x")

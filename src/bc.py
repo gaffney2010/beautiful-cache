@@ -56,7 +56,7 @@ class CacheTag(object):
     def _calc_id(self) -> Id:
         if self.tag is None:
             raise BcException("No tag to get ID for")
-        
+
         result = list()
 
         vertical_cursor = self.tag
@@ -92,9 +92,7 @@ class CacheTag(object):
 
 
 class BeautifulCache(CacheTag):
-    def __init__(
-        self, url: Url, policy: Policy, engine: policy_engine_class.BcEngine
-    ):
+    def __init__(self, url: Url, policy: Policy, engine: policy_engine_class.BcEngine):
         self.url = url
         self.policy = policy
         # TODO: Default engine if not specified.  Make input param Optional then.

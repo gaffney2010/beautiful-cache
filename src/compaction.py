@@ -2,28 +2,37 @@ from typing import Any, Dict
 
 from shared_types import *
 from src.policy_engine_class import BcEngine
+import tree_crawl
 
 
 # TODO: Can I just set BcEngine globally with a singleton or something?
-def compact_all(policy: Policy, settings: Dict[str, Any], engine: BcEngine) -> None:
-    max_bytes = settings["max_bytes"]
-
-    while engine.file_system.size(policy) > max_bytes:
-        newly_deleted = engine.database.pop(policy)
-        affected_urls = {pui.url for pui in newly_deleted}
-        for url in affected_urls:
-            if len(engine.database.query(pui(policy, url, "*"))) == 0:
-                # Safe to delete file.
-                engine.file_system.delete(policy, url)
+def compact_all(policy: Policy, url: Url, engine: BcEngine) -> None:
+    if len(engine.database.query(pui(policy, url, "*"))) == 0:
+        # Safe to delete file.
+        engine.file_system.delete(policy, url)
 
 
-def compact_fat(policy: Policy, settings: Dict[str, Any], engine: BcEngine) -> None:
-    raise NotImplementedError
+def compact_fat(policy: Policy, url: Url, engine: BcEngine) -> None:
+    ids = [row.id for row in engine.database.query(pui(policy, url, "*"))]
+    id_splits = [id.split("/") for id in ids]
+
+    # TODO: Some of this logic should be in tree_crawl?
+    common_ancestors = list()
+    for i in range(len(id_splits[0])):
+        # Check that all match
+        for id_split in id_splits:
+            if i >= len(id_split):
+                break
+            if id_split[0] != id_splits[0][0]:
+                break
+        common_ancestors.append(id_splits[i])
+
+    html = engine.file_system.read(policy, url)
+    # TODO: Make it clear in documentation that write overwrites.
+    engine.file_system.write(policy, url, tree_crawl.isolate_id(html, id))
 
 
-def compact_thin(
-    policy: Policy, settings: Dict[str, Any], engine: BcEngine
-) -> None:
+def compact_thin(policy: Policy, url: Url, engine: BcEngine) -> None:
     raise NotImplementedError
 
 
@@ -40,10 +49,17 @@ def compact(policy: Policy, settings: Dict[str, Any], engine: BcEngine) -> None:
 
     strategy = settings["strategy"]
     if strategy == "all":
-        return compact_all(policy, settings, engine)
+        file_compaction = compact_all
     elif strategy == "fat":
-        return compact_fat(policy, settings, engine)
+        file_compaction = compact_fat
     elif strategy == "thin":
-        return compact_thin(policy, settings, engine)
+        file_compaction = compact_thin
     else:
         raise BcException(f"Unknown compaction strategy: {strategy}")
+
+    max_bytes = settings["max_bytes"]
+    while engine.file_system.size(policy) > max_bytes:
+        newly_deleted = engine.database.pop(policy)
+        affected_urls = {pui.url for pui in newly_deleted}
+        for url in affected_urls:
+            file_compaction(policy, url, engine)
