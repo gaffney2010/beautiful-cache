@@ -16,28 +16,26 @@ class PolicyEngine(object):
     clock: Clock = attr.ib()
 
     @overload
-    def append(self, pfi: Pfi) -> None:
+    def append(self, pui: Pui) -> None:
         """Append to database with current time."""
-        self.database._append(pfi, self.clock.now())
+        self.database._append(pui, self.clock.now())
 
     @append.add
-    def append(self, policy: Policy, filename: Filename, id: Id) -> None:
-        self.append(pfi(policy, filename, id))
+    def append(self, policy: Policy, url: Url, id: Id) -> None:
+        self.append(pui(policy, url, id))
 
     # TODO: Put policy first.
     def read_url(self, url: Url, policy: Policy) -> Html:
         """Reads url, saving an access record to the database at the same time."""
-        fn = self.file_system.key(url)
-
-        if self.file_system.exists(fn):
-            return Html(self.file_system.read(fn))
+        if self.file_system.exists(policy, url):
+            return Html(self.file_system.read(policy, url))
 
         # Cast to soup then back, so as to erase whitespace
         untrimmed_html = self.url_reader._read(url)
 
         html = Html(tree_crawl.trim_html(untrimmed_html))
 
-        self.append(policy, fn, Id(""))  # Store the root in Requests db
-        self.file_system.write(fn, html)  # Save
+        self.append(policy, url, Id(""))  # Store the root in Requests db
+        self.file_system.write(policy, url, html)  # Save
 
         return html

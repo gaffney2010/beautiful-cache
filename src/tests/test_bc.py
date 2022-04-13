@@ -52,7 +52,7 @@ class TestEndToEnd(unittest.TestCase):
         # Check that a cached version of the html (after trimming) has been saved.
         self.assertDictEqual(
             engine.file_system.files,
-            {"test_url.data": tree_crawl.trim_html(example_html)},
+            {"test_policy/test_url.data": tree_crawl.trim_html(example_html)},
         )
 
         # Check that three Request records have been added to the db.  One for the
@@ -60,16 +60,16 @@ class TestEndToEnd(unittest.TestCase):
         self.assertDictEqual(
             engine.database.db,
             {
-                pfi("test_policy", "test_url.data", ""): 0,
+                pui("test_policy", "test_url", ""): 0,
                 # Timestamps determined by the number of clicks that have passed.
-                pfi(
+                pui(
                     "test_policy",
-                    "test_url.data",
+                    "test_url",
                     "html:0/body:0/table:0/tr:0/td:0/a:0",
                 ): 1,
-                pfi(
+                pui(
                     "test_policy",
-                    "test_url.data",
+                    "test_url",
                     "html:0/body:0/table:0/tr:1/td:1/a:0",
                 ): 2,
             },
@@ -81,7 +81,7 @@ class TestEndToEnd(unittest.TestCase):
 
         engine = (
             PolicyEngineGenerator()
-            .add_file("test_url.data", old_html)
+            .add_file("test_policy/test_url.data", old_html)
             .add_website("test_url", new_html)
             .build()
         )
@@ -92,7 +92,7 @@ class TestEndToEnd(unittest.TestCase):
         # Shouldn't have a request for the root, because I didn't reload.
         self.assertDictEqual(
             engine.database.db,
-            {pfi("test_policy", "test_url.data", "html:0/body:0/tag:0"): 0},
+            {pui("test_policy", "test_url", "html:0/body:0/tag:0"): 0},
         )
 
     def test_reloads_on_missing_component_with_success(self):
@@ -100,6 +100,8 @@ class TestEndToEnd(unittest.TestCase):
 
     def test_reloads_on_missing_component_with_failure(self):
         pass
+
+    # TODO: Make tests for multiple policies.
 
 
 #     # TODO: This needs to be done with a real db

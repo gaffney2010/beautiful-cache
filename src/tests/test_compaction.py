@@ -28,15 +28,15 @@ class TestCompaction(unittest.TestCase):
         peg = PolicyEngineGenerator()
 
         # TODO: Consistent typing in tests...
-        peg.add_file("f1.data", tree_crawl.trim_html(html))
+        peg.add_file("test_policy/f1.data", tree_crawl.trim_html(html))
         peg.add_file(
-            "f2.data", "..."
+            "test_policy/f2.data", "..."
         )  # Something to check existence if everything else deleted.
 
-        peg.add_request("test_policy", "f1.data", "", 0)
-        peg.add_request("test_policy", "f1.data", "body:0/div:0/p:0/a:1", 1)
-        peg.add_request("test_policy", "f1.data", "body:0/div:0/p:2", 2)
-        peg.add_request("test_policy", "f2.data", "", 3)
+        peg.add_request("test_policy", "f1", "", 0)
+        peg.add_request("test_policy", "f1", "body:0/div:0/p:0/a:1", 1)
+        peg.add_request("test_policy", "f1", "body:0/div:0/p:2", 2)
+        peg.add_request("test_policy", "f2", "", 3)
 
         return peg.build()
 
@@ -56,13 +56,13 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.file_system.files,
             {
-                Filename("f2.data"): "...",
+                Filename("test_policy/f2.data"): "...",
             },
         )
         self.assertDictEqual(
             engine.database.db,
             {
-                pfi("test_policy", "f2.data", ""): Time(3),
+                pui("test_policy", "f2", ""): Time(3),
             },
         )
 
@@ -101,3 +101,5 @@ class TestCompaction(unittest.TestCase):
     def test_bump_only_materialized_file(self):
         # TODO:
         pass
+
+    # TODO: Test multiple policies

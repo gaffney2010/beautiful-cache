@@ -15,12 +15,12 @@ class CacheTag(object):
         self,
         tag: bs4.element.Tag,
         policy: Policy,
-        filename: Filename,
+        url: Url,
         engine: policy_engine_class.PolicyEngine,
     ):
         self.tag = tag
         self.policy = policy
-        self.filename = filename
+        self.url = url
         self.engine = engine
 
         self._id: Optional[Id] = None
@@ -28,13 +28,13 @@ class CacheTag(object):
     # TODO: Make a CacheTagList object that we allow to materialize all at once.
     def find_all(self, *args, **kwargs) -> List["CacheTag"]:
         return [
-            CacheTag(t, self.policy, self.filename, self.engine)
+            CacheTag(t, self.policy, self.url, self.engine)
             for t in self.tag.find_all(*args, **kwargs)
         ]
 
     def find(self, *args, **kwargs) -> "CacheTag":
         return CacheTag(
-            self.tag.find(*args, **kwargs), self.policy, self.filename, self.engine
+            self.tag.find(*args, **kwargs), self.policy, self.url, self.engine
         )
 
     def materialize(self) -> bs4.element.Tag:
@@ -42,7 +42,7 @@ class CacheTag(object):
             raise BcException("No tag to materialize")
 
         # Add a new access record everytime we access.
-        self.engine.append(self.policy, self.filename, self.id())
+        self.engine.append(self.policy, self.url, self.id())
 
         return self.tag
 
@@ -90,10 +90,7 @@ class BeautifulCache(CacheTag):
         # TODO: Default engine if not specified.  Make input param Optional then.
         self.engine = engine
 
-        # TODO: Better way to do this.
-        filename = self.engine.file_system.key(url)
-
         html = engine.read_url(self.url, self.policy)
         soup = bs4.BeautifulSoup(html, features="lxml")
 
-        super().__init__(soup, self.policy, filename, self.engine)
+        super().__init__(soup, self.policy, url, self.engine)

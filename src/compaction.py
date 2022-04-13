@@ -10,11 +10,11 @@ def compact_all(policy: Policy, settings: Dict[str, Any], engine: PolicyEngine) 
 
     while engine.file_system.size(policy) > max_bytes:
         newly_deleted = engine.database.pop(policy)
-        affected_files = {pfi.filename for pfi in newly_deleted}
-        for fn in affected_files:
-            if len(engine.database.query(pfi(policy, fn, "*"))) == 0:
+        affected_urls = {pui.url for pui in newly_deleted}
+        for url in affected_urls:
+            if len(engine.database.query(pui(policy, url, "*"))) == 0:
                 # Safe to delete file.
-                engine.file_system.delete(policy, fn)
+                engine.file_system.delete(policy, url)
 
 
 def compact_fat(policy: Policy, settings: Dict[str, Any], engine: PolicyEngine) -> None:

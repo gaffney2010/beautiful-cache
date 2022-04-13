@@ -18,38 +18,38 @@ class MockUrlReader(bc.UrlReader):
 
 
 class MockDatabase(bc.Database):
-    def __init__(self, db: Optional[Dict[Pfi, Time]] = None):
+    def __init__(self, db: Optional[Dict[Pui, Time]] = None):
         self.db = db
         if self.db is None:
             self.db = dict()
         super().__init__()
 
-    def _append(self, pfi: Pfi, ts: Time) -> None:
-        self.db[pfi] = ts
+    def _append(self, pui: Pui, ts: Time) -> None:
+        self.db[pui] = ts
 
-    def _query(self, pfi: Pfi) -> Dict[Pfi, Time]:
+    def _query(self, pui: Pui) -> Dict[Pui, Time]:
         result = dict()
         for k, v in self.db.items():
-            if k.match(pfi):
+            if k.match(pui):
                 result[k] = v
         return result
 
-    def query(self, pfi: Pfi) -> List[Pfi]:
-        """Returns all the records in the database matching the passed pfi upto
+    def query(self, pui: Pui) -> List[Pui]:
+        """Returns all the records in the database matching the passed pui upto
         wildcard characters.
 
         A wildcard character is a "*".  When the entire record is a wildcard, then that
         matches any record.  '*' as part of a longer string is not treated as a
         wildcard.
         """
-        return list(self._query(pfi).keys())
+        return list(self._query(pui).keys())
 
-    def pop(self, policy: Policy) -> List[Pfi]:
+    def pop(self, policy: Policy) -> List[Pui]:
         """Remove the records with the smallest timestamp, and return."""
         if len(self.db) == 0:
             raise BcException("Trying to pop from an empty DB")
 
-        match_policy = [(v, k) for k, v in self._query(pfi(policy, "*", "*")).items()]
+        match_policy = [(v, k) for k, v in self._query(pui(policy, "*", "*")).items()]
         min_time = sorted(match_policy)[0][0]
         result = [k for (v, k) in match_policy if v == min_time]
 
@@ -67,26 +67,26 @@ class MockFileSystem(bc.FileSystem):
             self.files = dict()
         super().__init__()
 
-    def read(self, fn: Filename) -> str:
+    def read(self, policy: Policy, url: Url) -> str:
         try:
-            result = self.files[fn]
+            result = self.files[self._key(policy, url)]
         except KeyError:
             raise BcException(f"Trying to read mock file that doesn't exist: {fn}")
 
         return result
 
-    def write(self, fn: Filename, content: str) -> None:
-        self.files[fn] = content
+    def write(self, policy: Policy, url: Url, content: str) -> None:
+        self.files[self._key(policy, url)] = content
 
-    def exists(self, fn: Filename) -> bool:
-        return fn in self.files
+    def exists(self, policy: Policy, url: Url) -> bool:
+        return self._key(policy, url) in self.files
 
     def size(self, policy: Policy) -> Bytes:
         # Just count characters for tests.
         return Bytes(sum(len(content) for content in self.files.values()))
 
-    def delete(self, policy: Policy, fn: Filename) -> None:
-        del self.files[fn]
+    def delete(self, policy: Policy, url: Url) -> None:
+        del self.files[self._key(policy, url)]
 
 
 class MockClock(bc.Clock):
@@ -110,20 +110,22 @@ class PolicyEngineGenerator(object):
     def __init__(self):
         self.internet: Dict[Url, Html] = dict()
         self.files: Dict[Filename, str] = dict()
-        self.db: Dict[Pfi, Time] = dict()
+        self.db: Dict[Pui, Time] = dict()
 
     def add_website(self, url: Url, html: Html) -> "PolicyEngineGenerator":
         self.internet[url] = html
         return self
 
     def add_file(self, fn: Filename, text: str) -> "PolicyEngineGenerator":
+        # Note that we could just have the mock file system key on URLs, but this is
+        #  more realistic.
         self.files[fn] = text
         return self
 
     def add_request(
-        self, policy: Policy, fn: Filename, id: Id, ts: Time
+        self, policy: Policy, url: Url, id: Id, ts: Time
     ) -> "PolicyEngineGenerator":
-        self.db[pfi(policy, fn, id)] = ts
+        self.db[pui(policy, url, id)] = ts
         return self
 
     def build(self) -> policy_engine_class.PolicyEngine:
