@@ -18,7 +18,24 @@ class Pfi(object):
     filename: Filename = attr.ib()
     id: Id = attr.ib()
 
+    def match(self, other: "Pfi") -> bool:
+        """Check matching with wildcards.  Can use == for non-wildcard matching"""
+        policy_match = self.policy == other.policy
+        if self.policy == "*" or other.policy == "*":
+            policy_match = True
 
+        filename_match = self.filename == other.filename
+        if self.filename == "*" or other.filename == "*":
+            filename_match = True
+
+        id_match = self.id == other.id
+        if self.id == "*" or other.id == "*":
+            id_match = True
+
+        return policy_match and filename_match and id_match
+
+
+# TODO: Call make_pfi or something
 def pfi(
     policy: Union[Policy, str], filename: Union[Filename, str], id: Union[Id, str]
 ) -> Pfi:
@@ -43,12 +60,14 @@ class Database(object):
     def _append(self, pfi: Pfi, ts: Time) -> None:
         raise NotImplementedError
 
-    def size(self, policy: Policy) -> Bytes:
-        """Returns total size of all data files in policy."""
-        raise NotImplementedError
+    def query(self, pfi: Pfi) -> List[Pfi]:
+        """Returns all the records in the database matching the passed pfi upto
+        wildcard characters.
 
-    def query_id(self, policy: Policy, file: Filename) -> List[Id]:
-        """Returns the set of ids in the database for the given policy / filename."""
+        A wildcard character is a "*".  When the entire record is a wildcard, then that
+        matches any record.  '*' as part of a longer string is not treated as a
+        wildcard.
+        """
         raise NotImplementedError
 
     def pop(self, policy: Policy) -> List[Pfi]:
@@ -61,6 +80,10 @@ class FileSystem(object):
     def __init__(self):
         pass
 
+    def size(self, policy: Policy) -> Bytes:
+        """Returns total size of all data files in policy."""
+        raise NotImplementedError
+
     def key(self, url: Url) -> Filename:
         return Filename(url.replace("/", "") + ".data")
 
@@ -71,6 +94,9 @@ class FileSystem(object):
         raise NotImplementedError
 
     def exists(self, fn: Filename) -> bool:
+        raise NotImplementedError
+
+    def delete(self, policy: Policy, fn: Filename) -> None:
         raise NotImplementedError
 
 

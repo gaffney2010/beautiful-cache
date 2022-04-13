@@ -27,6 +27,7 @@ class TestCompaction(unittest.TestCase):
 
         peg = PolicyEngineGenerator()
 
+        # TODO: Consistent typing in tests...
         peg.add_file("f1.data", tree_crawl.trim_html(html))
         peg.add_file(
             "f2.data", "..."
@@ -40,7 +41,6 @@ class TestCompaction(unittest.TestCase):
         return peg.build()
 
     def test_all_happy_path(self):
-        # TODO:
         engine = self._setup_happy_paths()
         # Engine has size = 179 at this point.
 
@@ -48,20 +48,21 @@ class TestCompaction(unittest.TestCase):
         target_size = 150
 
         compaction.compact(
-            "test_policy", settings={"max_bytes": target_size, "strategy": "all"}
+            "test_policy",
+            settings={"max_bytes": target_size, "strategy": "all"},
+            engine=engine,
         )
 
         self.assertDictEqual(
-            engine.file_system,
+            engine.file_system.files,
             {
                 Filename("f2.data"): "...",
             },
         )
-        # TODO: Untype these in tests.
         self.assertDictEqual(
-            engine.file_system,
+            engine.database.db,
             {
-                (Policy("test_policy"), Filename("f2.data"), Id("")): Time(3),
+                pfi("test_policy", "f2.data", ""): Time(3),
             },
         )
 

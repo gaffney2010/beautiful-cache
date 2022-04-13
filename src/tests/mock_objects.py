@@ -18,7 +18,7 @@ class MockUrlReader(bc.UrlReader):
 
 
 class MockDatabase(bc.Database):
-    def __init__(self, db: Optional[Dict[Tuple[Policy, Filename, Id], Time]] = None):
+    def __init__(self, db: Optional[Dict[Pfi, Time]] = None):
         self.db = db
         if self.db is None:
             self.db = dict()
@@ -27,15 +27,37 @@ class MockDatabase(bc.Database):
     def _append(self, pfi: Pfi, ts: Time) -> None:
         self.db[pfi] = ts
 
-    def query_id(self, policy: Policy, file: Filename) -> List[Id]:
-        """Returns the set of ids in the database for the given policy / filename."""
-        raise NotImplementedError
-        # for k, v in self.db.items():
-        #     if k[0]
+    def _query(self, pfi: Pfi) -> Dict[Pfi, Time]:
+        result = dict()
+        for k, v in self.db.items():
+            if k.match(pfi):
+                result[k] = v
+        return result
+
+    def query(self, pfi: Pfi) -> List[Pfi]:
+        """Returns all the records in the database matching the passed pfi upto
+        wildcard characters.
+
+        A wildcard character is a "*".  When the entire record is a wildcard, then that
+        matches any record.  '*' as part of a longer string is not treated as a
+        wildcard.
+        """
+        return list(self._query(pfi).keys())
 
     def pop(self, policy: Policy) -> List[Pfi]:
         """Remove the records with the smallest timestamp, and return."""
-        raise NotImplementedError
+        if len(self.db) == 0:
+            raise BcException("Trying to pop from an empty DB")
+
+        match_policy = [(v, k) for k, v in self._query(pfi(policy, "*", "*")).items()]
+        min_time = sorted(match_policy)[0][0]
+        result = [k for (v, k) in match_policy if v == min_time]
+
+        # Removing motion
+        for r in result:
+            del self.db[r]
+
+        return result
 
 
 class MockFileSystem(bc.FileSystem):
@@ -62,6 +84,9 @@ class MockFileSystem(bc.FileSystem):
     def size(self, policy: Policy) -> Bytes:
         # Just count characters for tests.
         return Bytes(sum(len(content) for content in self.files.values()))
+
+    def delete(self, policy: Policy, fn: Filename) -> None:
+        del self.files[fn]
 
 
 class MockClock(bc.Clock):
@@ -98,13 +123,13 @@ class PolicyEngineGenerator(object):
     def add_request(
         self, policy: Policy, fn: Filename, id: Id, ts: Time
     ) -> "PolicyEngineGenerator":
-        self.db[(policy, fn, id)] = ts
+        self.db[pfi(policy, fn, id)] = ts
         return self
 
     def build(self) -> policy_engine_class.PolicyEngine:
         return policy_engine_class.PolicyEngine(
             url_reader=MockUrlReader(self.internet),
-            database=MockDatabase(),
+            database=MockDatabase(self.db),
             file_system=MockFileSystem(self.files),
             clock=MockClock(),
         )
