@@ -16,7 +16,7 @@ class CacheTag(object):
         tag: bs4.element.Tag,
         policy: Policy,
         url: Url,
-        engine: policy_engine_class.PolicyEngine,
+        engine: policy_engine_class.BcEngine,
     ):
         self.tag = tag
         self.policy = policy
@@ -83,7 +83,7 @@ class CacheTag(object):
 
 class BeautifulCache(CacheTag):
     def __init__(
-        self, url: Url, policy: Policy, engine: policy_engine_class.PolicyEngine
+        self, url: Url, policy: Policy, engine: policy_engine_class.BcEngine
     ):
         self.url = url
         self.policy = policy

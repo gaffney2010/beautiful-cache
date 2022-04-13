@@ -30,7 +30,7 @@ class TestEndToEnd(unittest.TestCase):
         )
 
         engine = (
-            PolicyEngineGenerator().add_website(Url("test_url"), example_html).build()
+            BcEngineGenerator().add_website(Url("test_url"), example_html).build()
         )
 
         # Should be able to inject engines like this
@@ -80,7 +80,7 @@ class TestEndToEnd(unittest.TestCase):
         new_html = Html("<html><body><tag>NEW</tag></body></html>")
 
         engine = (
-            PolicyEngineGenerator()
+            BcEngineGenerator()
             .add_file("test_policy/test_url.data", old_html)
             .add_website("test_url", new_html)
             .build()
@@ -123,7 +123,7 @@ class TestIdEndToEnd(unittest.TestCase):
         )
 
         engine = (
-            PolicyEngineGenerator().add_website(Url("test_url"), example_html).build()
+            BcEngineGenerator().add_website(Url("test_url"), example_html).build()
         )
 
         soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
@@ -150,7 +150,7 @@ class TestIdEndToEnd(unittest.TestCase):
         )
 
         engine = (
-            PolicyEngineGenerator().add_website(Url("test_url"), example_html).build()
+            BcEngineGenerator().add_website(Url("test_url"), example_html).build()
         )
 
         soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
@@ -168,7 +168,7 @@ class TestIdEndToEnd(unittest.TestCase):
         )
 
         engine = (
-            PolicyEngineGenerator().add_website(Url("test_url"), example_html).build()
+            BcEngineGenerator().add_website(Url("test_url"), example_html).build()
         )
 
         soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)

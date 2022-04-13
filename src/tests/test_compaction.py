@@ -8,7 +8,7 @@ from tests.mock_objects import *
 
 
 class TestCompaction(unittest.TestCase):
-    def _setup_happy_paths(self) -> policy_engine_class.PolicyEngine:
+    def _setup_happy_paths(self) -> policy_engine_class.BcEngine:
         """For the first three tests, create the same HTML"""
         html = """
             <html>
@@ -25,20 +25,20 @@ class TestCompaction(unittest.TestCase):
             </body>
             </html>"""
 
-        peg = PolicyEngineGenerator()
+        beg = BcEngineGenerator()
 
         # TODO: Consistent typing in tests...
-        peg.add_file("test_policy/f1.data", tree_crawl.trim_html(html))
-        peg.add_file(
+        beg.add_file("test_policy/f1.data", tree_crawl.trim_html(html))
+        beg.add_file(
             "test_policy/f2.data", "..."
         )  # Something to check existence if everything else deleted.
 
-        peg.add_request("test_policy", "f1", "", 0)
-        peg.add_request("test_policy", "f1", "body:0/div:0/p:0/a:1", 1)
-        peg.add_request("test_policy", "f1", "body:0/div:0/p:2", 2)
-        peg.add_request("test_policy", "f2", "", 3)
+        beg.add_request("test_policy", "f1", "", 0)
+        beg.add_request("test_policy", "f1", "body:0/div:0/p:0/a:1", 1)
+        beg.add_request("test_policy", "f1", "body:0/div:0/p:2", 2)
+        beg.add_request("test_policy", "f2", "", 3)
 
-        return peg.build()
+        return beg.build()
 
     def test_all_happy_path(self):
         engine = self._setup_happy_paths()

@@ -1,11 +1,11 @@
 from typing import Any, Dict
 
 from shared_types import *
-from src.policy_engine_class import PolicyEngine
+from src.policy_engine_class import BcEngine
 
 
-# TODO: Can I just set policyEngine globally with a singleton or something?
-def compact_all(policy: Policy, settings: Dict[str, Any], engine: PolicyEngine) -> None:
+# TODO: Can I just set BcEngine globally with a singleton or something?
+def compact_all(policy: Policy, settings: Dict[str, Any], engine: BcEngine) -> None:
     max_bytes = settings["max_bytes"]
 
     while engine.file_system.size(policy) > max_bytes:
@@ -17,19 +17,19 @@ def compact_all(policy: Policy, settings: Dict[str, Any], engine: PolicyEngine) 
                 engine.file_system.delete(policy, url)
 
 
-def compact_fat(policy: Policy, settings: Dict[str, Any], engine: PolicyEngine) -> None:
+def compact_fat(policy: Policy, settings: Dict[str, Any], engine: BcEngine) -> None:
     raise NotImplementedError
 
 
 def compact_thin(
-    policy: Policy, settings: Dict[str, Any], engine: PolicyEngine
+    policy: Policy, settings: Dict[str, Any], engine: BcEngine
 ) -> None:
     raise NotImplementedError
 
 
 # TODO: Return some kind of message.
 # TODO: Default arguments.
-def compact(policy: Policy, settings: Dict[str, Any], engine: PolicyEngine) -> None:
+def compact(policy: Policy, settings: Dict[str, Any], engine: BcEngine) -> None:
     # TODO: Fill in settings blanks from yaml.
 
     for required_field in ("max_bytes", "strategy"):

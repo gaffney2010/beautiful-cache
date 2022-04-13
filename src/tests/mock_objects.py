@@ -101,8 +101,8 @@ class MockClock(bc.Clock):
         return self.clock
 
 
-class PolicyEngineGenerator(object):
-    """Will create a new mock PolicyEngine on build()
+class BcEngineGenerator(object):
+    """Will create a new mock BcEngine on build()
 
     Should include a mock file system, a mock Requests database, a mock webdriver, and a mock clock.
     """
@@ -112,11 +112,11 @@ class PolicyEngineGenerator(object):
         self.files: Dict[Filename, str] = dict()
         self.db: Dict[Pui, Time] = dict()
 
-    def add_website(self, url: Url, html: Html) -> "PolicyEngineGenerator":
+    def add_website(self, url: Url, html: Html) -> "BcEngineGenerator":
         self.internet[url] = html
         return self
 
-    def add_file(self, fn: Filename, text: str) -> "PolicyEngineGenerator":
+    def add_file(self, fn: Filename, text: str) -> "BcEngineGenerator":
         # Note that we could just have the mock file system key on URLs, but this is
         #  more realistic.
         self.files[fn] = text
@@ -124,12 +124,12 @@ class PolicyEngineGenerator(object):
 
     def add_request(
         self, policy: Policy, url: Url, id: Id, ts: Time
-    ) -> "PolicyEngineGenerator":
+    ) -> "BcEngineGenerator":
         self.db[pui(policy, url, id)] = ts
         return self
 
-    def build(self) -> policy_engine_class.PolicyEngine:
-        return policy_engine_class.PolicyEngine(
+    def build(self) -> policy_engine_class.BcEngine:
+        return policy_engine_class.BcEngine(
             url_reader=MockUrlReader(self.internet),
             database=MockDatabase(self.db),
             file_system=MockFileSystem(self.files),

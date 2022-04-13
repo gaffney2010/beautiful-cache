@@ -7,9 +7,8 @@ from shared_types import *
 import tree_crawl
 
 
-# TODO: Rename PolicyEngine
 @attr.s()
-class PolicyEngine(object):
+class BcEngine(object):
     url_reader: UrlReader = attr.ib()
     database: Database = attr.ib()
     file_system: FileSystem = attr.ib()
