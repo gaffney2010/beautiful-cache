@@ -1,4 +1,6 @@
-from typing import Any, NewType, Tuple, Union
+from typing import List, NewType, Tuple, Union
+
+import attr
 
 
 Bytes = NewType("Bytes", int)
@@ -9,14 +11,19 @@ Policy = NewType("Policy", str)
 Time = NewType("Time", int)  # TODO: What is this?  Ms since epoch?
 Url = NewType("Url", str)
 
-Pfi = Tuple[Policy, Filename, Id]
+
+@attr.s(frozen=True)
+class Pfi(object):
+    policy: Policy = attr.ib()
+    filename: Filename = attr.ib()
+    id: Id = attr.ib()
 
 
 def pfi(
     policy: Union[Policy, str], filename: Union[Filename, str], id: Union[Id, str]
 ) -> Pfi:
     # Convenient wrapper, I sup'ose
-    return (Policy(policy), Filename(filename), Id(id))
+    return Pfi(policy=Policy(policy), filename=Filename(filename), id=Id(id))
 
 
 # Make a bunch of abstract base classes.
@@ -38,6 +45,14 @@ class Database(object):
 
     def size(self, policy: Policy) -> Bytes:
         """Returns total size of all data files in policy."""
+        raise NotImplementedError
+
+    def query_id(self, policy: Policy, file: Filename) -> List[Id]:
+        """Returns the set of ids in the database for the given policy / filename."""
+        raise NotImplementedError
+
+    def pop(self, policy: Policy) -> List[Pfi]:
+        """Remove the records with the smallest timestamp, and return."""
         raise NotImplementedError
 
 

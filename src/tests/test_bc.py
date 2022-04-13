@@ -60,17 +60,17 @@ class TestEndToEnd(unittest.TestCase):
         self.assertDictEqual(
             engine.database.db,
             {
-                (Policy("test_policy"), Filename("test_url.data"), Id("")): 0,
+                pfi("test_policy", "test_url.data", ""): 0,
                 # Timestamps determined by the number of clicks that have passed.
-                (
-                    Policy("test_policy"),
-                    Filename("test_url.data"),
-                    Id("html:0/body:0/table:0/tr:0/td:0/a:0"),
+                pfi(
+                    "test_policy",
+                    "test_url.data",
+                    "html:0/body:0/table:0/tr:0/td:0/a:0",
                 ): 1,
-                (
-                    Policy("test_policy"),
-                    Filename("test_url.data"),
-                    Id("html:0/body:0/table:0/tr:1/td:1/a:0"),
+                pfi(
+                    "test_policy",
+                    "test_url.data",
+                    "html:0/body:0/table:0/tr:1/td:1/a:0",
                 ): 2,
             },
         )
@@ -92,13 +92,7 @@ class TestEndToEnd(unittest.TestCase):
         # Shouldn't have a request for the root, because I didn't reload.
         self.assertDictEqual(
             engine.database.db,
-            {
-                (
-                    Policy("test_policy"),
-                    Filename("test_url.data"),
-                    Id("html:0/body:0/tag:0"),
-                ): 0,
-            },
+            {pfi("test_policy", "test_url.data", "html:0/body:0/tag:0"): 0},
         )
 
     def test_reloads_on_missing_component_with_success(self):

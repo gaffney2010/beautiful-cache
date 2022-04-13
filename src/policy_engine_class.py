@@ -1,4 +1,5 @@
 import attr
+
 # Omit this from mypy analysis because of the overload.
 from overload import overload
 
@@ -7,7 +8,6 @@ import tree_crawl
 
 
 # TODO: Rename PolicyEngine
-# TODO: Should PolicyEngine hold the policy?
 @attr.s()
 class PolicyEngine(object):
     url_reader: UrlReader = attr.ib()

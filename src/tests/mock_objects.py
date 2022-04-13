@@ -27,6 +27,16 @@ class MockDatabase(bc.Database):
     def _append(self, pfi: Pfi, ts: Time) -> None:
         self.db[pfi] = ts
 
+    def query_id(self, policy: Policy, file: Filename) -> List[Id]:
+        """Returns the set of ids in the database for the given policy / filename."""
+        raise NotImplementedError
+        # for k, v in self.db.items():
+        #     if k[0]
+
+    def pop(self, policy: Policy) -> List[Pfi]:
+        """Remove the records with the smallest timestamp, and return."""
+        raise NotImplementedError
+
 
 class MockFileSystem(bc.FileSystem):
     def __init__(self, files: Optional[Dict[Filename, str]] = None):
