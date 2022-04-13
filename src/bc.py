@@ -28,12 +28,18 @@ class CacheTag(object):
 
     # TODO: Make a CacheTagList object that we allow to materialize all at once.
     def find_all(self, *args, **kwargs) -> List["CacheTag"]:
+        if self.tag is None:
+            raise BcException("No tag to search")
+
         return [
             CacheTag(t, self.policy, self.url, self.engine)
             for t in self.tag.find_all(*args, **kwargs)
         ]
 
     def find(self, *args, **kwargs) -> "CacheTag":
+        if self.tag is None:
+            raise BcException("No tag to search")
+
         return CacheTag(
             self.tag.find(*args, **kwargs), self.policy, self.url, self.engine
         )
@@ -47,9 +53,10 @@ class CacheTag(object):
 
         return self.tag
 
-    # TODO: Should this logic live in tree_crawl?
     def _calc_id(self) -> Id:
-        # TODO: Handle self.tag is None throughout.
+        if self.tag is None:
+            raise BcException("No tag to get ID for")
+        
         result = list()
 
         vertical_cursor = self.tag
@@ -78,6 +85,9 @@ class CacheTag(object):
         return self._id
 
     def __str__(self) -> str:
+        if not self.tag:
+            return "tagless-node"
+
         return str(self.tag)
 
 
