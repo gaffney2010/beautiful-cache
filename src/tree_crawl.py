@@ -1,10 +1,11 @@
 import bs4  # type: ignore
 
+import shared_logic
 from shared_types import *
 
 
 def _st_tag(ingredient) -> str:
-    if ingredient.parent is None:
+    if shared_logic.is_root(ingredient.parent):
         # Corner case for top level [document]
         return ""
 

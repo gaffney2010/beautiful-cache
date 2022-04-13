@@ -5,6 +5,7 @@ from typing import List, Optional
 import bs4  # type: ignore
 
 import policy_engine_class
+import shared_logic
 from shared_types import *
 
 
@@ -52,8 +53,7 @@ class CacheTag(object):
         result = list()
 
         vertical_cursor = self.tag
-        # TODO: Make a short function called top-level, so that we have consistent logic throughout.
-        while vertical_cursor.parent is not None:
+        while not shared_logic.is_root(vertical_cursor.parent):
             name = vertical_cursor.name
             i = 0
 
