@@ -25,7 +25,7 @@ class PolicyEngine(object):
         self.append(pui(policy, url, id))
 
     # TODO: Put policy first.
-    def read_url(self, url: Url, policy: Policy) -> Html:
+    def read_url(self, policy: Policy, url: Url) -> Html:
         """Reads url, saving an access record to the database at the same time."""
         if self.file_system.exists(policy, url):
             return Html(self.file_system.read(policy, url))

@@ -90,7 +90,7 @@ class BeautifulCache(CacheTag):
         # TODO: Default engine if not specified.  Make input param Optional then.
         self.engine = engine
 
-        html = engine.read_url(self.url, self.policy)
+        html = engine.read_url(self.policy, self.url)
         soup = bs4.BeautifulSoup(html, features="lxml")
 
         super().__init__(soup, self.policy, url, self.engine)
