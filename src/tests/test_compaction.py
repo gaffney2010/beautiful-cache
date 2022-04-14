@@ -100,28 +100,28 @@ class TestCompaction(unittest.TestCase):
         )
 
         # Slightly larger trim will remove second access record, leaving only p:2
-        # compaction.compact(
-        #     "test_policy",
-        #     settings={"max_bytes": 100, "strategy": "fat"},
-        #     engine=engine,
-        # )
+        compaction.compact(
+            "test_policy",
+            settings={"max_bytes": 100, "strategy": "fat"},
+            engine=engine,
+        )
 
-        # self.assertDictEqual(
-        #     engine.file_system.files,
-        #     {
-        #         Filename(
-        #             "test_policy/f1.data"
-        #         ): "<body><div><p><p>5 <span>my_span</span></p></p></div></body>",
-        #         Filename("test_policy/f2.data"): "...",
-        #     },
-        # )
-        # self.assertDictEqual(
-        #     engine.database.db,
-        #     {
-        #         pui("test_policy", "f1", "body:0/div:0/p:2"): 2,
-        #         pui("test_policy", "f2", ""): Time(3),
-        #     },
-        # )
+        self.assertDictEqual(
+            engine.file_system.files,
+            {
+                Filename(
+                    "test_policy/f1.data"
+                ): "<html><body><div><p>5 <span>my_span</span></p></div></body></html>",
+                Filename("test_policy/f2.data"): "...",
+            },
+        )
+        self.assertDictEqual(
+            engine.database.db,
+            {
+                pui("test_policy", "f1", "html:0/body:0/div:0/p:2"): 2,
+                pui("test_policy", "f2", ""): Time(3),
+            },
+        )
 
     def test_thin_happy_path(self):
         # TODO:
