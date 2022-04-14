@@ -14,26 +14,16 @@ def compact_all(policy: Policy, url: Url, engine: BcEngine) -> None:
 
 def compact_fat(policy: Policy, url: Url, engine: BcEngine) -> None:
     ids = [row.id for row in engine.database.query(pui(policy, url, "*"))]
-    id_splits = [id.split("/") for id in ids]
-
-    # TODO: Some of this logic should be in tree_crawl?
-    common_ancestors = list()
-    for i in range(len(id_splits[0])):
-        # Check that all match
-        for id_split in id_splits:
-            if i >= len(id_split):
-                break
-            if id_split[0] != id_splits[0][0]:
-                break
-        common_ancestors.append(id_splits[i])
-
+    id = tree_crawl.common_ancestor(ids)
     html = engine.file_system.read(policy, url)
     # TODO: Make it clear in documentation that write overwrites.
     engine.file_system.write(policy, url, tree_crawl.isolate_id(html, id))
 
 
 def compact_thin(policy: Policy, url: Url, engine: BcEngine) -> None:
-    raise NotImplementedError
+    ids = [row.id for row in engine.database.query(pui(policy, url, "*"))]
+    html = engine.file_system.read(policy, url)
+    engine.file_system.write(policy, url, tree_crawl.combine_ids(html, ids))
 
 
 # TODO: Return some kind of message.
