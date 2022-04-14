@@ -33,10 +33,22 @@ def compact_fat(policy: Policy, url: Url, engine: BcEngine) -> None:
     engine.database.batch_load(new_rows)
 
 
-# def compact_thin(policy: Policy, url: Url, engine: BcEngine) -> None:
-#     ids = [row.id for row in engine.database.pop_query(pui(policy, url, "*"))]
-#     html = engine.file_system.read(policy, url)
-#     engine.file_system.write(policy, url, tree_crawl.combine_ids(html, ids))
+def compact_thin(policy: Policy, url: Url, engine: BcEngine) -> None:
+    rows = engine.database.pop_query(pui(policy, url, "*"))
+    row_by_id = {k.id: v for k, v in rows}
+    ids = list(row_by_id.keys())
+
+    # Update the cache file
+    html = engine.file_system.read(policy, url)
+    id_mapper: Dict[Id, Id] = dict()
+    engine.file_system.write(policy, url, tree_crawl.combine_ids(html, ids, id_mapper))
+
+    # Update the Requests to contain new addresses
+    new_rows = list()
+    for old in ids:
+        new = id_mapper[old]
+        new_rows.append((pui(policy, url, new), row_by_id[old]))
+    engine.database.batch_load(new_rows)
 
 
 # TODO: Return some kind of message.

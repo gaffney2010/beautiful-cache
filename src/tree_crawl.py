@@ -1,5 +1,5 @@
 import collections
-from typing import DefaultDict, List
+from typing import DefaultDict, Dict, List
 
 import bs4  # type: ignore
 
@@ -132,16 +132,24 @@ def isolate_id(html: Html, id: Id) -> Html:
     return Html(_isolate(soup, id.split("/"), 0))
 
 
-def combine_ids(html: Html, ids: List[Id]) -> Html:
+# TODO: This could probably be split.
+def combine_ids(html: Html, ids: List[Id], id_mapper: Dict[Id, Id]) -> Html:
+    # TODO: This probably needs a docstring
     # TODO: Id checks
 
     # TODO: Make type for IdSplits = List[str]
-    def _combine(working_ingredient, id_splits: List[List[str]], ind: int) -> str:
+    def _combine(
+        new_prefix: List[str], working_ingredient, id_splits: List[List[str]], ind: int
+    ) -> str:
+        # TODO: This probably needs a docstring
+        nonlocal id_mapper
+
         # Check that we're in a valid state.  This can be removed if too slow.
         for i in range(ind):
             for id_split in id_splits:
                 if i >= len(id_split) or id_split[i] != id_splits[0][i]:
                     raise BcException(f"Invalid set of ids in combine_ids: {id_splits}")
+        old_prefix = id_splits[0][:ind]  # Well-defined
 
         # If this is end for id_split, then we don't have keep descending, return the
         #  whole node.
@@ -158,6 +166,7 @@ def combine_ids(html: Html, ids: List[Id]) -> Html:
 
         # Loop through all the children, descending when we have IDs that match that.
         tag_counter: DefaultDict[str, int] = collections.defaultdict(int)
+        used_tag_counter: DefaultDict[str, int] = collections.defaultdict(int)
         for ingred in working_ingredient.children:
             if ingred.name is None:
                 # Not a tag
@@ -165,7 +174,16 @@ def combine_ids(html: Html, ids: List[Id]) -> Html:
 
             key = f"{ingred.name}:{tag_counter[ingred.name]}"
             if key in split_by_ingred:
-                result.append(_combine(ingred, split_by_ingred[key], ind + 1))
+                old_id = "/".join(old_prefix + [key])
+                # TODO: I like "parts" better than "split" - change everywhere.
+                new_id_split = new_prefix + [
+                    f"{ingred.name}:{used_tag_counter[ingred.name]}"
+                ]
+                new_id = "/".join(new_id_split)
+                id_mapper[Id(old_id)] = Id(new_id)
+                result.append(
+                    _combine(new_id_split, ingred, split_by_ingred[key], ind + 1)
+                )
             tag_counter[ingred.name] += 1
 
         result.append(_en_tag(working_ingredient))
@@ -174,4 +192,4 @@ def combine_ids(html: Html, ids: List[Id]) -> Html:
 
     soup = bs4.BeautifulSoup(html, features="lxml")
     id_splits = [id.split("/") for id in ids]
-    return Html(_combine(soup, id_splits, 0))
+    return Html(_combine([], soup, id_splits, 0))
