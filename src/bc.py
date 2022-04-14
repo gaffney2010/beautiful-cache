@@ -4,7 +4,7 @@ from typing import List, Optional
 
 import bs4  # type: ignore
 
-import policy_engine_class
+from policy_engine_class import BcEngine  # type: ignore
 import shared_logic
 from shared_types import *
 
@@ -17,7 +17,7 @@ class CacheTag(object):
         tag: bs4.element.Tag,
         policy: Policy,
         url: Url,
-        engine: policy_engine_class.BcEngine,
+        engine: BcEngine,
     ):
         self.tag = tag
         self.policy = policy
@@ -59,6 +59,7 @@ class CacheTag(object):
 
         result = list()
 
+        # TODO: Move to tree_crawl
         vertical_cursor = self.tag
         while not shared_logic.is_root(vertical_cursor.parent):
             name = vertical_cursor.name
@@ -74,6 +75,9 @@ class CacheTag(object):
             this_entry = f"{name}:{i}"
             result.append(this_entry)
             vertical_cursor = vertical_cursor.parent
+
+        # TODO: I don't like this.
+        result.append("html:0")
 
         return Id("/".join(reversed(result)))
 
@@ -92,7 +96,7 @@ class CacheTag(object):
 
 
 class BeautifulCache(CacheTag):
-    def __init__(self, url: Url, policy: Policy, engine: policy_engine_class.BcEngine):
+    def __init__(self, url: Url, policy: Policy, engine: BcEngine):
         self.url = url
         self.policy = policy
         # TODO: Default engine if not specified.  Make input param Optional then.

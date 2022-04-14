@@ -1,7 +1,7 @@
 from typing import Any, Dict
 
+from policy_engine_class import BcEngine  # type: ignore
 from shared_types import *
-from src.policy_engine_class import BcEngine
 import tree_crawl
 
 

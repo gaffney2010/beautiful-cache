@@ -1,5 +1,5 @@
 import collections
-from posixpath import split
+from typing import DefaultDict, List
 
 import bs4  # type: ignore
 
@@ -10,7 +10,7 @@ from shared_types import *
 
 
 def _st_tag(ingredient) -> str:
-    if shared_logic.is_root(ingredient.parent):
+    if shared_logic.is_root(ingredient):
         # Corner case for top level [document]
         return ""
 
@@ -77,7 +77,7 @@ def common_ancestor(ids: List[Id]) -> Id:
                 break
             if id_split[0] != id_splits[0][0]:
                 break
-        common_ancestors.append(id_splits[i])
+        common_ancestors.append(id_splits[0][i])
 
     return Id("/".join(common_ancestors))
 
@@ -127,7 +127,7 @@ def combine_ids(html: Html, ids: List[Id]) -> Html:
         result = [_st_tag(working_ingredient)]
 
         # Loop through all the children, descending when we have IDs that match that.
-        tag_counter = collections.defaultdict(int)
+        tag_counter: DefaultDict[str, int] = collections.defaultdict(int)
         for ingred in working_ingredient.children:
             if ingred.name is None:
                 # Not a tag
@@ -144,4 +144,4 @@ def combine_ids(html: Html, ids: List[Id]) -> Html:
 
     soup = bs4.BeautifulSoup(html, features="lxml")
     id_splits = [id.split("/") for id in ids]
-    return Html(soup, id_splits, 0)
+    return Html(_combine(soup, id_splits, 0))

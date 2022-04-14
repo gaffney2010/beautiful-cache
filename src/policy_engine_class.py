@@ -1,3 +1,5 @@
+# type: ignore
+
 import attr
 
 # Omit this from mypy analysis because of the overload.

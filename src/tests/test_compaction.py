@@ -66,9 +66,31 @@ class TestCompaction(unittest.TestCase):
             },
         )
 
-    def test_fat_happy_path(self):
-        # TODO:
-        pass
+    # def test_fat_happy_path(self):
+    #     engine = self._setup_happy_paths()
+    #     # Engine has size = 179 at this point.
+
+    #     # Even a small trim will result in dropping the entire first file with the "all" strategy.
+    #     target_size = 150
+
+    #     compaction.compact(
+    #         "test_policy",
+    #         settings={"max_bytes": target_size, "strategy": "fat"},
+    #         engine=engine,
+    #     )
+
+    #     self.assertDictEqual(
+    #         engine.file_system.files,
+    #         {
+    #             Filename("test_policy/f2.data"): "...",
+    #         },
+    #     )
+    #     self.assertDictEqual(
+    #         engine.database.db,
+    #         {
+    #             pui("test_policy", "f2", ""): Time(3),
+    #         },
+    #     )
 
     def test_thin_happy_path(self):
         # TODO:
