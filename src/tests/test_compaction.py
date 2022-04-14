@@ -224,7 +224,6 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.file_system.files,
             {
-                # TODO: Why do I have div twice and body once?
                 Filename("test_policy/f1.data"): (
                     "<html> <head></head> <body> <div> "
                     "<p><a>1</a><a>2</a></p> <p><a>3</a><a>4</a></p> <p>5 "
@@ -250,8 +249,48 @@ class TestCompaction(unittest.TestCase):
         pass
 
     def test_ts_ties(self):
-        # TODO:
-        pass
+        # 54 bytes after trimming.
+        html = """
+            <html>
+            <body>
+            <a>A</a><b>B</b><c>C</c>
+            </body>
+            </html>"""
+
+        beg = BcEngineGenerator()
+
+        # TODO: Consistent typing in tests...
+        beg.add_file("test_policy/f1.data", tree_crawl.trim_html(html))
+
+        beg.add_request("test_policy", "f1", "", 0)
+        beg.add_request("test_policy", "f1", "html:0/body:0/a:0", 0)
+        beg.add_request("test_policy", "f1", "html:0/body:0/b:0", 0)
+        beg.add_request("test_policy", "f1", "html:0/body:0/c:0", 1)
+
+        engine = beg.build()
+
+        # Even though we only want to trim 1 character, a and b will both get deleted
+        compaction.compact(
+            "test_policy",
+            settings={"max_bytes": 53, "strategy": "thin"},
+            engine=engine,
+        )
+
+        self.assertDictEqual(
+            engine.file_system.files,
+            {
+                Filename("test_policy/f1.data"): (
+                    "<html><body><c>C</c></body></html>"
+                ),
+            },
+        )
+        # Notice that all the tags got remapped for the new doc.
+        self.assertDictEqual(
+            engine.database.db,
+            {
+                pui("test_policy", "f1", "html:0/body:0/c:0"): 1,
+            },
+        )
 
     def test_transaction(self):
         # TODO:
@@ -264,13 +303,3 @@ class TestCompaction(unittest.TestCase):
     def test_erase_entire_old_before_any_new(self):
         # TODO:
         pass
-
-    def test_after_materialize_compact_all(self):
-        # TODO:
-        pass
-
-    def test_bump_only_materialized_file(self):
-        # TODO:
-        pass
-
-    # TODO: Test multiple policies
