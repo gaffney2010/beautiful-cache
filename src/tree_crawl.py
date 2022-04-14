@@ -69,20 +69,24 @@ def common_ancestor(ids: List[Id]) -> Id:
     # TODO: Id checks
     id_splits = [id.split("/") for id in ids]
 
-    common_ancestors = list()
-    for i in range(len(id_splits[0])):
-        # Check that all match
-        for id_split in id_splits:
-            if i >= len(id_split):
-                break
-            if id_split[0] != id_splits[0][0]:
-                break
-        common_ancestors.append(id_splits[0][i])
+    def _common_ancestors(id_splits: List[List[str]]) -> List[str]:
+        """Make a sub functions for those lovely return statements"""
+        common_ancestors: List[str] = list()
+        for i in range(len(id_splits[0])):
+            # Check that all match
+            for id_split in id_splits:
+                if i >= len(id_split):
+                    return common_ancestors
+                if id_split[i] != id_splits[0][i]:
+                    return common_ancestors
+            common_ancestors.append(id_splits[0][i])
+        return common_ancestors
 
-    return Id("/".join(common_ancestors))
+    return Id("/".join(_common_ancestors(id_splits)))
 
 
 def isolate_id(html: Html, id: Id) -> Html:
+    # TODO: Consider making this validity check also thing that converts.
     # TODO: Make a global id valid checker, lru cache it.
 
     def _isolate(working_ingredient, id_split: List[str], ind: int) -> str:
@@ -91,6 +95,8 @@ def isolate_id(html: Html, id: Id) -> Html:
 
         # Find the right ingredient
         tag, i = id_split[ind].split(":")
+        # Validity of id checked alredy
+        i = int(i)  # type: ignore
         working_ingredient = working_ingredient.find_all(tag)[i]
         return (
             _st_tag(working_ingredient)

@@ -66,31 +66,38 @@ class TestCompaction(unittest.TestCase):
             },
         )
 
-    # def test_fat_happy_path(self):
-    #     engine = self._setup_happy_paths()
-    #     # Engine has size = 179 at this point.
+    def test_fat_happy_path(self):
+        engine = self._setup_happy_paths()
+        # Engine has size = 179 at this point.
 
-    #     # Even a small trim will result in dropping the entire first file with the "all" strategy.
-    #     target_size = 150
+        # Even a small trim will result in dropping the entire first file with the "all" strategy.
+        target_size = 150
 
-    #     compaction.compact(
-    #         "test_policy",
-    #         settings={"max_bytes": target_size, "strategy": "fat"},
-    #         engine=engine,
-    #     )
+        compaction.compact(
+            "test_policy",
+            settings={"max_bytes": target_size, "strategy": "fat"},
+            engine=engine,
+        )
 
-    #     self.assertDictEqual(
-    #         engine.file_system.files,
-    #         {
-    #             Filename("test_policy/f2.data"): "...",
-    #         },
-    #     )
-    #     self.assertDictEqual(
-    #         engine.database.db,
-    #         {
-    #             pui("test_policy", "f2", ""): Time(3),
-    #         },
-    #     )
+        self.assertDictEqual(
+            engine.file_system.files,
+            {
+                Filename(
+                    "test_policy/f1.data"
+                ): "<body><div><div> <p><a>1</a><a>2</a></p> "
+                "<p><a>3</a><a>4</a></p> <p>5 <span>my_span</span></p> "
+                "</div></div></body>",
+                Filename("test_policy/f2.data"): "...",
+            },
+        )
+        self.assertDictEqual(
+            engine.database.db,
+            {
+                pui("test_policy", "f1", "body:0/div:0/p:0/a:1"): 1,
+                pui("test_policy", "f1", "body:0/div:0/p:2"): 2,
+                pui("test_policy", "f2", ""): Time(3),
+            },
+        )
 
     def test_thin_happy_path(self):
         # TODO:
