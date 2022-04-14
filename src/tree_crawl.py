@@ -98,11 +98,13 @@ def isolate_id(html: Html, id: Id) -> Html:
         # Validity of id checked alredy
         i = int(i)  # type: ignore
         working_ingredient = working_ingredient.find_all(tag)[i]
-        return (
-            _st_tag(working_ingredient)
-            + _isolate(working_ingredient, id_split, ind + 1)
-            + _en_tag(working_ingredient)
-        )
+
+        # TODO: I hate this.
+        # Handle next to base case special
+        desc = _isolate(working_ingredient, id_split, ind + 1)
+        if ind + 1 == len(id_split):
+            return desc
+        return _st_tag(working_ingredient) + desc + _en_tag(working_ingredient)
 
     soup = bs4.BeautifulSoup(html, features="lxml")
     return Html(_isolate(soup, id.split("/"), 0))
