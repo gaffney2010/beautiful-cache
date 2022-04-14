@@ -13,17 +13,30 @@ def compact_all(policy: Policy, url: Url, engine: BcEngine) -> None:
 
 
 def compact_fat(policy: Policy, url: Url, engine: BcEngine) -> None:
-    ids = [row.id for row in engine.database.query(pui(policy, url, "*"))]
-    id = tree_crawl.common_ancestor(ids)
+    # TODO: I should probably just make pop_query return a dict.  Ditto
+    #  batch_write.
+    rows = engine.database.pop_query(pui(policy, url, "*"))
+    row_by_id = {k.id: v for k, v in rows}
+    ids = list(row_by_id.keys())
+    ca = tree_crawl.common_ancestor(ids)
+
+    # Update the cache file
     html = engine.file_system.read(policy, url)
     # TODO: Make it clear in documentation that write overwrites.
-    engine.file_system.write(policy, url, tree_crawl.isolate_id(html, id))
+    engine.file_system.write(policy, url, tree_crawl.isolate_id(html, ca))
+
+    # Update the Requests to contain new addresses
+    new_ids = [tree_crawl.mask_id(id, ca) for id in ids]
+    new_rows = list()
+    for old, new in zip(ids, new_ids):
+        new_rows.append((pui(policy, url, new), row_by_id[old]))
+    engine.database.batch_load(new_rows)
 
 
-def compact_thin(policy: Policy, url: Url, engine: BcEngine) -> None:
-    ids = [row.id for row in engine.database.query(pui(policy, url, "*"))]
-    html = engine.file_system.read(policy, url)
-    engine.file_system.write(policy, url, tree_crawl.combine_ids(html, ids))
+# def compact_thin(policy: Policy, url: Url, engine: BcEngine) -> None:
+#     ids = [row.id for row in engine.database.pop_query(pui(policy, url, "*"))]
+#     html = engine.file_system.read(policy, url)
+#     engine.file_system.write(policy, url, tree_crawl.combine_ids(html, ids))
 
 
 # TODO: Return some kind of message.

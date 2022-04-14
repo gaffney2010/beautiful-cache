@@ -57,6 +57,8 @@ class Database(object):
         pass
 
     # TODO: Should I return a success message or something?
+    # TODO: Should these signatures should take policy separately for safety?
+    #  TODO: Actually I could make Pui into just Ui.  :/
     def _append(self, pui: Pui, ts: Time) -> None:
         raise NotImplementedError
 
@@ -72,6 +74,17 @@ class Database(object):
 
     def pop(self, policy: Policy) -> List[Pui]:
         """Remove the records with the smallest timestamp, and return."""
+        raise NotImplementedError
+
+    def pop_query(self, pui: Pui) -> List[Tuple[Pui, Time]]:
+        """Does the same as query, but removes the rows from the database.
+
+        Also returns the timestamps with it.
+        """
+        raise NotImplementedError
+
+    def batch_load(self, rows: List[Tuple[Pui, Time]]) -> None:
+        """Put all these rows in the table with a timestamp"""
         raise NotImplementedError
 
 

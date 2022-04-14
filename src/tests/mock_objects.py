@@ -59,6 +59,22 @@ class MockDatabase(bc.Database):
 
         return result
 
+    def pop_query(self, pui: Pui) -> List[Tuple[Pui, Time]]:
+        """Does the same as query, but removes the rows from the database.
+
+        Also returns the timestamps with it.
+        """
+        result = self._query(pui)
+        for k in result.keys():
+            del self.db[k]
+        return [(k, v) for k, v in result.items()]
+
+    def batch_load(self, rows: List[Tuple[Pui, Time]]) -> None:
+        """Put all these rows in the table with a timestamp"""
+        for row in rows:
+            pui, ts = row
+            self.db[pui] = ts
+
 
 class MockFileSystem(bc.FileSystem):
     def __init__(self, files: Optional[Dict[Filename, str]] = None):

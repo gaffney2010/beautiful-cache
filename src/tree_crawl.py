@@ -85,6 +85,28 @@ def common_ancestor(ids: List[Id]) -> Id:
     return Id("/".join(_common_ancestors(id_splits)))
 
 
+def mask_id(id: Id, mask: Id) -> Id:
+    """Given an Id, map everything up to the mask to tag:0.
+
+    This unusual function is a critical piece of remapping after a fat compaction.
+
+    For example
+    -----------
+    mask_id("a:1/b:2/c:3/d:7/e:8", "a:1/b:2/c:3") returns "a:0/b:0/c:0/d:7/e:8"
+    """
+    id = id.split("/")  # type: ignore
+
+    result = list()
+    for i, xi in enumerate(mask.split("/")):
+        assert xi == id[i]
+        tag, _ = xi.split(":")
+        result.append(f"{tag}:0")
+    # TODO: Add test where id==mask
+    result += id[i + 1 :]  # i = len(mask) here
+
+    return Id("/".join(result))
+
+
 def isolate_id(html: Html, id: Id) -> Html:
     # TODO: Consider making this validity check also thing that converts.
     # TODO: Make a global id valid checker, lru cache it.
