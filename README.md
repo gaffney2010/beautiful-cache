@@ -143,3 +143,6 @@ Future versions may allow different drivers to be injected.  (Or at least docume
 Our V1 will support only `find_all` and `find` with all the usual arguments.  From there additional functionality can be used by materializing the tag, then working with the BeautifulSoup objects.
 
 In future versions, we could easily support other tag-returning functions.
+
+## Over-compaction
+Compaction may introduce subtle bugs to code.  For example, you may try to read a field that you think exists, but it is missing.  Or you may operate under the false assumption that you have all the fields of a type.  We call such bugs "over-compaction."  Rather than try to make BeautifulCache smart about these cases, we let the library be dumb, and caution clients to be wary of over-compaction.  BeautifulCache works best for happy paths that do consistent operations over expected data.  It may not be appropriate for every use case.  Note also that when using the 'all' strategy, BeautifulCache acts as simply an LRU cache.

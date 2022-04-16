@@ -93,12 +93,6 @@ class TestEndToEnd(unittest.TestCase):
             {pui("test_policy", "test_url", "html:0/body:0/tag:0"): 0},
         )
 
-    def test_reloads_on_missing_component_with_success(self):
-        pass
-
-    def test_reloads_on_missing_component_with_failure(self):
-        pass
-
     # TODO: Make tests for multiple policies.
 
 
