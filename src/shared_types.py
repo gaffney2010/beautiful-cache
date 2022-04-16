@@ -74,7 +74,6 @@ class Id(object):
         raise Exception(f"Unexpected type for id: {type(other)}")
 
 
-# TODO: Row isn't great, because this may evolve
 @attr.s(frozen=True)
 class Row(object):
     policy: Policy = attr.ib()
