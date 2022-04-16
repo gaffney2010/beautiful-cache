@@ -1,5 +1,5 @@
 import os
-from typing import List, NewType, Tuple, Union
+from typing import Any, List, NewType, Tuple, Union
 
 import attr
 
@@ -8,6 +8,7 @@ Bytes = NewType("Bytes", int)
 Filename = str
 Html = NewType("Html", str)
 Id = NewType("Id", str)
+Ingredient = Any  # Can be bs4.soup or bs4.tag.  Update later.
 Policy = NewType("Policy", str)
 Time = NewType("Time", int)  # TODO: What is this?  Ms since epoch?
 Url = NewType("Url", str)

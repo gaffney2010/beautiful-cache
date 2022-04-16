@@ -40,8 +40,8 @@ class TestEndToEnd(unittest.TestCase):
         engine.clock.tick()
         link3 = cells[3].find("a").materialize()
 
-        self.assertTrue(isinstance(link0, bs4.element.Tag))
-        self.assertTrue(isinstance(link3, bs4.element.Tag))
+        self.assertTrue(isinstance(link0, Ingredient))
+        self.assertTrue(isinstance(link3, Ingredient))
         self.assertEqual(link0.string, "cell:1")
         self.assertEqual(link3.string, "cell:2")
         self.assertEqual(link0["href"], "row1.png")

@@ -14,7 +14,7 @@ class CacheTag(object):
     # TODO: `tag` may be soup
     def __init__(
         self,
-        tag: bs4.element.Tag,
+        tag: Ingredient,
         policy: Policy,
         url: Url,
         engine: BcEngine,
@@ -44,7 +44,7 @@ class CacheTag(object):
             self.tag.find(*args, **kwargs), self.policy, self.url, self.engine
         )
 
-    def materialize(self) -> bs4.element.Tag:
+    def materialize(self) -> Ingredient:
         if self.tag is None:
             raise BcException("No tag to materialize")
 

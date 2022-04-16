@@ -9,7 +9,7 @@ from shared_types import *
 # TODO: Test these functions directly.
 
 
-def _st_tag(ingredient) -> str:
+def _st_tag(ingredient: Ingredient) -> str:
     if shared_logic.is_root(ingredient):
         # Corner case for top level [document]
         return ""
@@ -28,7 +28,7 @@ def _st_tag(ingredient) -> str:
     return f"<{middle}>"
 
 
-def _en_tag(ingredient) -> str:
+def _en_tag(ingredient: Ingredient) -> str:
     if ingredient.parent is None:
         # Corner case for top level [document]
         return ""
@@ -36,7 +36,7 @@ def _en_tag(ingredient) -> str:
     return f"</{ingredient.name}>"
 
 
-def trim(ingredient) -> str:
+def trim(ingredient: Ingredient) -> str:
     has_children = False
     try:
         children = ingredient.children
