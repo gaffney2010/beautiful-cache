@@ -16,7 +16,9 @@ def compact_fat(policy: Policy, url: Url, engine: BcEngine) -> None:
     # TODO: I should probably just make pop_query return a dict.  Ditto
     #  batch_write.
     rows = engine.database.pop_query(pui(policy, url, "*"))
-    row_by_id = {k.id: v for k, v in rows}
+    # TODO: Replace with a function so that we're less like to make a conversion error.
+    #  TODO: Find other conversions to Id or to str
+    row_by_id = {Id(k.id): v for k, v in rows}
     ids = list(row_by_id.keys())
     ca = tree_crawl.common_ancestor(ids)
 
@@ -35,7 +37,7 @@ def compact_fat(policy: Policy, url: Url, engine: BcEngine) -> None:
 
 def compact_thin(policy: Policy, url: Url, engine: BcEngine) -> None:
     rows = engine.database.pop_query(pui(policy, url, "*"))
-    row_by_id = {k.id: v for k, v in rows}
+    row_by_id = {Id(k.id): v for k, v in rows}
     ids = list(row_by_id.keys())
 
     # Update the cache file

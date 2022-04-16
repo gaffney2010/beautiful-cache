@@ -50,7 +50,7 @@ class MockDatabase(bc.Database):
             raise BcException("Trying to pop from an empty DB")
 
         match_policy = [(v, k) for k, v in self._query(pui(policy, "*", "*")).items()]
-        min_time = sorted(match_policy)[0][0]
+        min_time = sorted(match_policy, key=lambda x: x[0])[0][0]
         result = [k for (v, k) in match_policy if v == min_time]
 
         # Removing motion

@@ -67,22 +67,22 @@ def trim_html(html: Html) -> Html:
 
 def common_ancestor(ids: List[Id]) -> Id:
     # TODO: Id checks
-    id_splits = [id.split("/") for id in ids]
 
-    def _common_ancestors(id_splits: List[List[str]]) -> List[str]:
+    # TODO: This doesn't need to be a subfunction.  I don't know why this happened.
+    def _common_ancestors(ids: List[Id]) -> List[str]:
         """Make a sub functions for those lovely return statements"""
         common_ancestors: List[str] = list()
-        for i in range(len(id_splits[0])):
+        for i in range(len(ids[0])):
             # Check that all match
-            for id_split in id_splits:
-                if i >= len(id_split):
+            for id in ids:
+                if i >= len(id):
                     return common_ancestors
-                if id_split[i] != id_splits[0][i]:
+                if id[i] != ids[0][i]:
                     return common_ancestors
-            common_ancestors.append(id_splits[0][i])
+            common_ancestors.append(ids[0][i])
         return common_ancestors
 
-    return Id("/".join(_common_ancestors(id_splits)))
+    return Id("/".join(_common_ancestors(ids)))
 
 
 def mask_id(id: Id, mask: Id) -> Id:
@@ -94,14 +94,14 @@ def mask_id(id: Id, mask: Id) -> Id:
     -----------
     mask_id("a:1/b:2/c:3/d:7/e:8", "a:1/b:2/c:3") returns "a:0/b:0/c:0/d:7/e:8"
     """
-    id = id.split("/")  # type: ignore
-
     result = list()
-    for i, xi in enumerate(mask.split("/")):
+    # TODO: mypy doesn't like this.
+    for i, xi in enumerate(mask):
         assert xi == id[i]
         tag, _ = xi.split(":")
         result.append(f"{tag}:0")
     # TODO: Add test where id==mask
+    # TODO: mypy doesn't like this.
     result += id[i + 1 :]  # i = len(mask) here
 
     return Id("/".join(result))
@@ -111,25 +111,25 @@ def isolate_id(html: Html, id: Id) -> Html:
     # TODO: Consider making this validity check also thing that converts.
     # TODO: Make a global id valid checker, lru cache it.
 
-    def _isolate(working_ingredient, id_split: List[str], ind: int) -> str:
-        if ind == len(id_split):
+    def _isolate(working_ingredient, id: Id, ind: int) -> str:
+        if ind == len(id):
             return trim(working_ingredient)
 
         # Find the right ingredient
-        tag, i = id_split[ind].split(":")
+        tag, i = id[ind].split(":")
         # Validity of id checked alredy
         i = int(i)  # type: ignore
         working_ingredient = working_ingredient.find_all(tag)[i]
 
         # TODO: I hate this.
         # Handle next to base case special
-        desc = _isolate(working_ingredient, id_split, ind + 1)
-        if ind + 1 == len(id_split):
+        desc = _isolate(working_ingredient, id, ind + 1)
+        if ind + 1 == len(id):
             return desc
         return _st_tag(working_ingredient) + desc + _en_tag(working_ingredient)
 
     soup = bs4.BeautifulSoup(html, features="lxml")
-    return Html(_isolate(soup, id.split("/"), 0))
+    return Html(_isolate(soup, id, 0))
 
 
 # TODO: This could probably be split.
@@ -137,30 +137,28 @@ def combine_ids(html: Html, ids: List[Id], id_mapper: Dict[Id, Id]) -> Html:
     # TODO: This probably needs a docstring
     # TODO: Id checks
 
-    # TODO: Make type for IdSplits = List[str]
-    def _combine(
-        new_prefix: List[str], working_ingredient, id_splits: List[List[str]], ind: int
-    ) -> str:
+    def _combine(new_prefix: Id, working_ingredient, ids: List[Id], ind: int) -> str:
         # TODO: This probably needs a docstring
         nonlocal id_mapper
 
         # Check that we're in a valid state.  This can be removed if too slow.
         for i in range(ind):
-            for id_split in id_splits:
-                if i >= len(id_split) or id_split[i] != id_splits[0][i]:
-                    raise BcException(f"Invalid set of ids in combine_ids: {id_splits}")
-        old_prefix = id_splits[0][:ind]  # Well-defined
+            for id in ids:
+                if i >= len(id) or id[i] != ids[0][i]:
+                    raise BcException(f"Invalid set of ids in combine_ids: {ids}")
+        # TODO: mypy doesn't like this.
+        old_prefix: List[str] = ids[0][:ind]  # Well-defined
 
-        # If this is end for id_split, then we don't have keep descending, return the
-        #  whole node.
-        for id_split in id_splits:
-            if ind == len(id_split):
+        # If this is end for id, then we don't have keep descending, return the whole
+        #  node.
+        for id in ids:
+            if ind == len(id):
                 return trim(working_ingredient)
 
         # Convert to look up easier in next step
-        split_by_ingred = collections.defaultdict(list)
-        for id_split in id_splits:
-            split_by_ingred[id_split[ind]].append(id_split)
+        id_by_ingred = collections.defaultdict(list)
+        for id in ids:
+            id_by_ingred[id[ind]].append(id)
 
         result = [_st_tag(working_ingredient)]
 
@@ -173,17 +171,11 @@ def combine_ids(html: Html, ids: List[Id], id_mapper: Dict[Id, Id]) -> Html:
                 continue
 
             key = f"{ingred.name}:{tag_counter[ingred.name]}"
-            if key in split_by_ingred:
-                old_id = "/".join(old_prefix + [key])
-                # TODO: I like "parts" better than "split" - change everywhere.
-                new_id_split = new_prefix + [
-                    f"{ingred.name}:{used_tag_counter[ingred.name]}"
-                ]
-                new_id = "/".join(new_id_split)
-                id_mapper[Id(old_id)] = Id(new_id)
-                result.append(
-                    _combine(new_id_split, ingred, split_by_ingred[key], ind + 1)
-                )
+            if key in id_by_ingred:
+                old_id = Id("/".join(old_prefix + [key]))
+                new_id = new_prefix + f"{ingred.name}:{used_tag_counter[ingred.name]}"
+                id_mapper[old_id] = new_id
+                result.append(_combine(new_id, ingred, id_by_ingred[key], ind + 1))
             tag_counter[ingred.name] += 1
 
         result.append(_en_tag(working_ingredient))
@@ -191,5 +183,4 @@ def combine_ids(html: Html, ids: List[Id], id_mapper: Dict[Id, Id]) -> Html:
         return "".join(result)
 
     soup = bs4.BeautifulSoup(html, features="lxml")
-    id_splits = [id.split("/") for id in ids]
-    return Html(_combine([], soup, id_splits, 0))
+    return Html(_combine(Id(""), soup, ids, 0))

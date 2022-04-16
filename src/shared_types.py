@@ -7,11 +7,71 @@ import attr
 Bytes = NewType("Bytes", int)
 Filename = str
 Html = NewType("Html", str)
-Id = NewType("Id", str)
 Ingredient = Any  # Can be bs4.soup or bs4.tag.  Update later.
 Policy = NewType("Policy", str)
 Time = NewType("Time", int)  # TODO: What is this?  Ms since epoch?
 Url = NewType("Url", str)
+
+
+class Id(object):
+    def __init__(self, id: str):
+        self._id = id
+        self._parts = id.split("/")
+
+    def __str__(self) -> str:
+        return self._id
+
+    def __getitem__(self, ind: int) -> str:
+        return self._parts[ind]
+
+    def __len__(self) -> int:
+        return len(self._parts)
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, str):
+            return self._id == other
+        if isinstance(other, Id):
+            return self._id == other._id
+        raise Exception(f"Unexpected type for id: {type(other)}")
+
+    def __hash__(self):
+        return hash(self._id)
+
+    def __add__(self, other: Union["Id", str]) -> "Id":
+        if isinstance(other, str):
+            if self._id == "":
+                return Id(other)
+            if other == "":
+                return self
+            return Id("/".join([self._id, other]))
+        if isinstance(other, Id):
+            if self._id == "":
+                return other
+            if other._id == "":
+                return self
+            return Id("/".join([self._id, other._id]))
+        raise Exception(f"Unexpected type for id: {type(other)}")
+
+    def __iadd__(self, other: Union["Id", str]) -> "Id":
+        if isinstance(other, str):
+            if self._id == "":
+                self._id = other
+                self._parts = other.split("/")
+            elif other == "":
+                pass
+            else:
+                self._id = "/".join([self._id, other])
+                self._parts += other.split("/")
+        if isinstance(other, Id):
+            if self._id == "":
+                self._id = other._id
+                self._parts = other._parts
+            elif other._id == "":
+                pass
+            else:
+                self._id = "/".join([self._id, other._id])
+                self._parts += other._parts
+        raise Exception(f"Unexpected type for id: {type(other)}")
 
 
 # TODO: Pui isn't great, because this may evolve
@@ -19,7 +79,8 @@ Url = NewType("Url", str)
 class Pui(object):
     policy: Policy = attr.ib()
     url: Url = attr.ib()
-    id: Id = attr.ib()
+    # We store as a string, because this is designed for database storage
+    id: str = attr.ib()
 
     def match(self, other: "Pui") -> bool:
         """Check matching with wildcards.  Can use == for non-wildcard matching"""
@@ -38,18 +99,12 @@ class Pui(object):
         return policy_match and url_match and id_match
 
 
-class IdParts(object):
-    def __init__(self, id: Id):
-        self._parts: List[str] = id.split("/")
-
-    def __getitem__(self, ind: int) -> str:
-        return self._parts[ind]
-
-
 # TODO: Call make_pui or something
 def pui(policy: Union[Policy, str], url: Union[Url, str], id: Union[Id, str]) -> Pui:
     # Convenient wrapper, I sup'ose
-    return Pui(policy=Policy(policy), url=Url(url), id=Id(id))
+    if isinstance(id, Id):
+        id = str(id)
+    return Pui(policy=Policy(policy), url=Url(url), id=id)
 
 
 # Make a bunch of abstract base classes.

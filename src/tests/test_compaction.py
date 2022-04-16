@@ -279,9 +279,7 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.file_system.files,
             {
-                Filename("test_policy/f1.data"): (
-                    "<html><body><c>C</c></body></html>"
-                ),
+                Filename("test_policy/f1.data"): ("<html><body><c>C</c></body></html>"),
             },
         )
         # Notice that all the tags got remapped for the new doc.
