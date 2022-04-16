@@ -11,7 +11,6 @@ from shared_types import *
 
 # TODO: Should I make a policy/filename variable?
 class CacheTag(object):
-    # TODO: `tag` may be soup
     def __init__(
         self,
         tag: Ingredient,
