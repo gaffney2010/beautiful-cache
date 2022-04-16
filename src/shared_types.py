@@ -38,6 +38,14 @@ class Pui(object):
         return policy_match and url_match and id_match
 
 
+class IdParts(object):
+    def __init__(self, id: Id):
+        self._parts: List[str] = id.split("/")
+
+    def __getitem__(self, ind: int) -> str:
+        return self._parts[ind]
+
+
 # TODO: Call make_pui or something
 def pui(policy: Union[Policy, str], url: Union[Url, str], id: Union[Id, str]) -> Pui:
     # Convenient wrapper, I sup'ose
