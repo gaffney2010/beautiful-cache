@@ -5,7 +5,7 @@ from shared_types import *
 import tree_crawl
 
 
-# TODO: Can I just set BcEngine globally with a singleton or something?
+# TODO(#3): Can I just set BcEngine globally with a singleton or something?
 def compact_all(policy: Policy, url: Url, engine: BcEngine) -> None:
     if len(engine.database.query(make_row(policy, url, "*"))) == 0:
         # Safe to delete file.
@@ -13,18 +13,18 @@ def compact_all(policy: Policy, url: Url, engine: BcEngine) -> None:
 
 
 def compact_fat(policy: Policy, url: Url, engine: BcEngine) -> None:
-    # TODO: I should probably just make pop_query return a dict.  Ditto
+    # TODO(#2.5): I should probably just make pop_query return a dict.  Ditto
     #  batch_write.
     rows = engine.database.pop_query(make_row(policy, url, "*"))
-    # TODO: Replace with a function so that we're less like to make a conversion error.
-    #  TODO: Find other conversions to Id or to str
+    # TODO(#1): Replace with a function so that we're less like to make a conversion error.
+    #  TODO(#1): Find other conversions to Id or to str
     row_by_id = {Id(k.id): v for k, v in rows}
     ids = list(row_by_id.keys())
     ca = tree_crawl.common_ancestor(ids)
 
     # Update the cache file
     html = engine.file_system.read(policy, url)
-    # TODO: Make it clear in documentation that write overwrites.
+    # TODO(#1): Make it clear in documentation that write overwrites.
     engine.file_system.write(policy, url, tree_crawl.isolate_id(html, ca))
 
     # Update the Requests to contain new addresses
@@ -53,10 +53,10 @@ def compact_thin(policy: Policy, url: Url, engine: BcEngine) -> None:
     engine.database.batch_load(new_rows)
 
 
-# TODO: Return some kind of message.
+# TODO(#2): Return some kind of message.
 # TODO: Default arguments.
 def compact(policy: Policy, settings: Dict[str, Any], engine: BcEngine) -> None:
-    # TODO: Fill in settings blanks from yaml.
+    # TODO(#4): Fill in settings blanks from yaml.
 
     for required_field in ("max_bytes", "strategy"):
         if required_field not in settings:

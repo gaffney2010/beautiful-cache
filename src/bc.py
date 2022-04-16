@@ -9,7 +9,7 @@ import shared_logic
 from shared_types import *
 
 
-# TODO: Should I make a policy/filename variable?
+# TODO(#3): Should I make a policy/filename variable?
 class CacheTag(object):
     def __init__(
         self,
@@ -25,7 +25,7 @@ class CacheTag(object):
 
         self._id: Optional[Id] = None
 
-    # TODO: Make a CacheTagList object that we allow to materialize all at once.
+    # TODO(#5): Make a CacheTagList object that we allow to materialize all at once.
     def find_all(self, *args, **kwargs) -> List["CacheTag"]:
         if self.tag is None:
             raise BcException("No tag to search")
@@ -58,7 +58,7 @@ class CacheTag(object):
 
         result = list()
 
-        # TODO: Move to tree_crawl
+        # TODO(#1): Move to tree_crawl
         vertical_cursor = self.tag
         while not shared_logic.is_root(vertical_cursor.parent):
             name = vertical_cursor.name
@@ -75,7 +75,7 @@ class CacheTag(object):
             result.append(this_entry)
             vertical_cursor = vertical_cursor.parent
 
-        # TODO: I don't like this.
+        # TODO(#1): I don't like this.
         result.append("html:0")
 
         return Id("/".join(reversed(result)))

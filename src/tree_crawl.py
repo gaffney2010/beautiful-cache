@@ -114,7 +114,7 @@ def isolate_id(html: Html, id: Id) -> Html:
         i = int(i)  # type: ignore
         working_ingredient = working_ingredient.find_all(tag)[i]
 
-        # TODO: I hate this.
+        # TODO(#1): I hate this.
         # Handle next to base case special
         desc = _isolate(working_ingredient, id, ind + 1)
         if ind + 1 == len(id):
@@ -125,15 +125,15 @@ def isolate_id(html: Html, id: Id) -> Html:
     return Html(_isolate(soup, id, 0))
 
 
-# TODO: This could probably be split.
+# TODO(#1): This could probably be split.
 def combine_ids(html: Html, ids: List[Id], id_mapper: Dict[Id, Id]) -> Html:
-    # TODO: This probably needs a docstring
+    # TODO(#1): This probably needs a docstring
     for id in ids:
         if not shared_logic.validate_id(id, html):
             raise BcException(f"Id {id} not valid for HTML")
 
     def _combine(new_prefix: Id, working_ingredient, ids: List[Id], ind: int) -> str:
-        # TODO: This probably needs a docstring
+        # TODO(#1): This probably needs a docstring
         nonlocal id_mapper
 
         # Check that we're in a valid state.  This can be removed if too slow.

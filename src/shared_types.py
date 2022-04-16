@@ -130,9 +130,9 @@ class Database(object):
     def __init__(self):
         pass
 
-    # TODO: Should I return a success message or something?
-    # TODO: Should these signatures should take policy separately for safety?
-    #  TODO: Actually I could make Row into just Ui.  :/
+    # TODO(#2): Should I return a success message or something?
+    # TODO(#3): Should these signatures should take policy separately for safety?
+    #  TODO(#3): Actually Row maybe shouldn't contain policy...  :/
     def _append(self, row: Row, ts: Time) -> None:
         raise NotImplementedError
 
