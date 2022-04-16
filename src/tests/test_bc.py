@@ -59,14 +59,14 @@ class TestEndToEnd(unittest.TestCase):
         self.assertDictEqual(
             engine.database.db,
             {
-                row("test_policy", "test_url", ""): 0,
+                make_row("test_policy", "test_url", ""): 0,
                 # Timestamps determined by the number of clicks that have passed.
-                row(
+                make_row(
                     "test_policy",
                     "test_url",
                     "html:0/body:0/table:0/tr:0/td:0/a:0",
                 ): 1,
-                row(
+                make_row(
                     "test_policy",
                     "test_url",
                     "html:0/body:0/table:0/tr:1/td:1/a:0",
@@ -91,7 +91,7 @@ class TestEndToEnd(unittest.TestCase):
         # Shouldn't have a request for the root, because I didn't reload.
         self.assertDictEqual(
             engine.database.db,
-            {row("test_policy", "test_url", "html:0/body:0/tag:0"): 0},
+            {make_row("test_policy", "test_url", "html:0/body:0/tag:0"): 0},
         )
 
     # TODO: Make tests for multiple policies.

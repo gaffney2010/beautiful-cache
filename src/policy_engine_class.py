@@ -23,7 +23,7 @@ class BcEngine(object):
 
     @append.add
     def append(self, policy: Policy, url: Url, id: Id) -> None:
-        self.append(row(policy, url, id))
+        self.append(make_row(policy, url, id))
 
     def read_url(self, policy: Policy, url: Url) -> Html:
         """Reads url, saving an access record to the database at the same time."""

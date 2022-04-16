@@ -98,8 +98,7 @@ class Row(object):
         return policy_match and url_match and id_match
 
 
-# TODO: Call make_row or something
-def row(policy: Union[Policy, str], url: Union[Url, str], id: Union[Id, str]) -> Row:
+def make_row(policy: Union[Policy, str], url: Union[Url, str], id: Union[Id, str]) -> Row:
     # Convenient wrapper, I sup'ose
     if isinstance(id, Id):
         id = str(id)

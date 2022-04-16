@@ -63,7 +63,7 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.database.db,
             {
-                row("test_policy", "f2", ""): Time(3),
+                make_row("test_policy", "f2", ""): Time(3),
             },
         )
 
@@ -91,9 +91,9 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.database.db,
             {
-                row("test_policy", "f1", "html:0/body:0/div:0/p:0/a:1"): 1,
-                row("test_policy", "f1", "html:0/body:0/div:0/p:2"): 2,
-                row("test_policy", "f2", ""): Time(3),
+                make_row("test_policy", "f1", "html:0/body:0/div:0/p:0/a:1"): 1,
+                make_row("test_policy", "f1", "html:0/body:0/div:0/p:2"): 2,
+                make_row("test_policy", "f2", ""): Time(3),
             },
         )
 
@@ -117,8 +117,8 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.database.db,
             {
-                row("test_policy", "f1", "html:0/body:0/div:0/p:0"): 2,
-                row("test_policy", "f2", ""): Time(3),
+                make_row("test_policy", "f1", "html:0/body:0/div:0/p:0"): 2,
+                make_row("test_policy", "f2", ""): Time(3),
             },
         )
 
@@ -148,9 +148,9 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.database.db,
             {
-                row("test_policy", "f1", "html:0/body:0/div:0/p:0/a:0"): 1,
-                row("test_policy", "f1", "html:0/body:0/div:0/p:0"): 2,
-                row("test_policy", "f2", ""): Time(3),
+                make_row("test_policy", "f1", "html:0/body:0/div:0/p:0/a:0"): 1,
+                make_row("test_policy", "f1", "html:0/body:0/div:0/p:0"): 2,
+                make_row("test_policy", "f2", ""): Time(3),
             },
         )
 
@@ -173,8 +173,8 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.database.db,
             {
-                row("test_policy", "f1", "html:0/body:0/div:0/p:0"): 2,
-                row("test_policy", "f2", ""): Time(3),
+                make_row("test_policy", "f1", "html:0/body:0/div:0/p:0"): 2,
+                make_row("test_policy", "f2", ""): Time(3),
             },
         )
 
@@ -204,9 +204,9 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.database.db,
             {
-                row("test_policy", "f1", "html:0/body:0/div:0/p:0"): 2,
+                make_row("test_policy", "f1", "html:0/body:0/div:0/p:0"): 2,
                 # TODO: More consistently type on these tests, plz.
-                row("test_policy", "f2", ""): Time(3),
+                make_row("test_policy", "f2", ""): Time(3),
             },
         )
 
@@ -237,10 +237,10 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.database.db,
             {
-                row("test_policy", "f1", ""): Time(0),
-                row("test_policy", "f1", "html:0/body:0/div:0/p:0/a:1"): 1,
-                row("test_policy", "f1", "html:0/body:0/div:0/p:2"): 2,
-                row("test_policy", "f2", ""): Time(3),
+                make_row("test_policy", "f1", ""): Time(0),
+                make_row("test_policy", "f1", "html:0/body:0/div:0/p:0/a:1"): 1,
+                make_row("test_policy", "f1", "html:0/body:0/div:0/p:2"): 2,
+                make_row("test_policy", "f2", ""): Time(3),
             },
         )
 
@@ -286,7 +286,7 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.database.db,
             {
-                row("test_policy", "f1", "html:0/body:0/c:0"): 1,
+                make_row("test_policy", "f1", "html:0/body:0/c:0"): 1,
             },
         )
 
