@@ -74,15 +74,15 @@ class Id(object):
         raise Exception(f"Unexpected type for id: {type(other)}")
 
 
-# TODO: Pui isn't great, because this may evolve
+# TODO: Row isn't great, because this may evolve
 @attr.s(frozen=True)
-class Pui(object):
+class Row(object):
     policy: Policy = attr.ib()
     url: Url = attr.ib()
     # We store as a string, because this is designed for database storage
     id: str = attr.ib()
 
-    def match(self, other: "Pui") -> bool:
+    def match(self, other: "Row") -> bool:
         """Check matching with wildcards.  Can use == for non-wildcard matching"""
         policy_match = self.policy == other.policy
         if self.policy == "*" or other.policy == "*":
@@ -99,12 +99,12 @@ class Pui(object):
         return policy_match and url_match and id_match
 
 
-# TODO: Call make_pui or something
-def pui(policy: Union[Policy, str], url: Union[Url, str], id: Union[Id, str]) -> Pui:
+# TODO: Call make_row or something
+def row(policy: Union[Policy, str], url: Union[Url, str], id: Union[Id, str]) -> Row:
     # Convenient wrapper, I sup'ose
     if isinstance(id, Id):
         id = str(id)
-    return Pui(policy=Policy(policy), url=Url(url), id=id)
+    return Row(policy=Policy(policy), url=Url(url), id=id)
 
 
 # Make a bunch of abstract base classes.
@@ -122,12 +122,12 @@ class Database(object):
 
     # TODO: Should I return a success message or something?
     # TODO: Should these signatures should take policy separately for safety?
-    #  TODO: Actually I could make Pui into just Ui.  :/
-    def _append(self, pui: Pui, ts: Time) -> None:
+    #  TODO: Actually I could make Row into just Ui.  :/
+    def _append(self, row: Row, ts: Time) -> None:
         raise NotImplementedError
 
-    def query(self, pui: Pui) -> List[Pui]:
-        """Returns all the records in the database matching the passed pui upto
+    def query(self, row: Row) -> List[Row]:
+        """Returns all the records in the database matching the passed row upto
         wildcard characters.
 
         A wildcard character is a "*".  When the entire record is a wildcard, then that
@@ -136,18 +136,18 @@ class Database(object):
         """
         raise NotImplementedError
 
-    def pop(self, policy: Policy) -> List[Pui]:
+    def pop(self, policy: Policy) -> List[Row]:
         """Remove the records with the smallest timestamp, and return."""
         raise NotImplementedError
 
-    def pop_query(self, pui: Pui) -> List[Tuple[Pui, Time]]:
+    def pop_query(self, row: Row) -> List[Tuple[Row, Time]]:
         """Does the same as query, but removes the rows from the database.
 
         Also returns the timestamps with it.
         """
         raise NotImplementedError
 
-    def batch_load(self, rows: List[Tuple[Pui, Time]]) -> None:
+    def batch_load(self, rows: List[Tuple[Row, Time]]) -> None:
         """Put all these rows in the table with a timestamp"""
         raise NotImplementedError
 

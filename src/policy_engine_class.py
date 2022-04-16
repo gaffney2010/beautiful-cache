@@ -17,13 +17,13 @@ class BcEngine(object):
     clock: Clock = attr.ib()
 
     @overload
-    def append(self, pui: Pui) -> None:
+    def append(self, row: Row) -> None:
         """Append to database with current time."""
-        self.database._append(pui, self.clock.now())
+        self.database._append(row, self.clock.now())
 
     @append.add
     def append(self, policy: Policy, url: Url, id: Id) -> None:
-        self.append(pui(policy, url, id))
+        self.append(row(policy, url, id))
 
     def read_url(self, policy: Policy, url: Url) -> Html:
         """Reads url, saving an access record to the database at the same time."""

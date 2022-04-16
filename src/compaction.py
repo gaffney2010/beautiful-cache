@@ -7,7 +7,7 @@ import tree_crawl
 
 # TODO: Can I just set BcEngine globally with a singleton or something?
 def compact_all(policy: Policy, url: Url, engine: BcEngine) -> None:
-    if len(engine.database.query(pui(policy, url, "*"))) == 0:
+    if len(engine.database.query(row(policy, url, "*"))) == 0:
         # Safe to delete file.
         engine.file_system.delete(policy, url)
 
@@ -15,7 +15,7 @@ def compact_all(policy: Policy, url: Url, engine: BcEngine) -> None:
 def compact_fat(policy: Policy, url: Url, engine: BcEngine) -> None:
     # TODO: I should probably just make pop_query return a dict.  Ditto
     #  batch_write.
-    rows = engine.database.pop_query(pui(policy, url, "*"))
+    rows = engine.database.pop_query(row(policy, url, "*"))
     # TODO: Replace with a function so that we're less like to make a conversion error.
     #  TODO: Find other conversions to Id or to str
     row_by_id = {Id(k.id): v for k, v in rows}
@@ -31,12 +31,12 @@ def compact_fat(policy: Policy, url: Url, engine: BcEngine) -> None:
     new_ids = [tree_crawl.mask_id(id, ca) for id in ids]
     new_rows = list()
     for old, new in zip(ids, new_ids):
-        new_rows.append((pui(policy, url, new), row_by_id[old]))
+        new_rows.append((row(policy, url, new), row_by_id[old]))
     engine.database.batch_load(new_rows)
 
 
 def compact_thin(policy: Policy, url: Url, engine: BcEngine) -> None:
-    rows = engine.database.pop_query(pui(policy, url, "*"))
+    rows = engine.database.pop_query(row(policy, url, "*"))
     row_by_id = {Id(k.id): v for k, v in rows}
     ids = list(row_by_id.keys())
 
@@ -49,7 +49,7 @@ def compact_thin(policy: Policy, url: Url, engine: BcEngine) -> None:
     new_rows = list()
     for old in ids:
         new = id_mapper[old]
-        new_rows.append((pui(policy, url, new), row_by_id[old]))
+        new_rows.append((row(policy, url, new), row_by_id[old]))
     engine.database.batch_load(new_rows)
 
 
@@ -77,6 +77,6 @@ def compact(policy: Policy, settings: Dict[str, Any], engine: BcEngine) -> None:
     max_bytes = settings["max_bytes"]
     while engine.file_system.size(policy) > max_bytes:
         newly_deleted = engine.database.pop(policy)
-        affected_urls = {pui.url for pui in newly_deleted}
+        affected_urls = {row.url for row in newly_deleted}
         for url in affected_urls:
             file_compaction(policy, url, engine)

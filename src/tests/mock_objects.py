@@ -18,38 +18,38 @@ class MockUrlReader(bc.UrlReader):
 
 
 class MockDatabase(bc.Database):
-    def __init__(self, db: Optional[Dict[Pui, Time]] = None):
+    def __init__(self, db: Optional[Dict[Row, Time]] = None):
         self.db = db
         if self.db is None:
             self.db = dict()
         super().__init__()
 
-    def _append(self, pui: Pui, ts: Time) -> None:
-        self.db[pui] = ts
+    def _append(self, row: Row, ts: Time) -> None:
+        self.db[row] = ts
 
-    def _query(self, pui: Pui) -> Dict[Pui, Time]:
+    def _query(self, row: Row) -> Dict[Row, Time]:
         result = dict()
         for k, v in self.db.items():
-            if k.match(pui):
+            if k.match(row):
                 result[k] = v
         return result
 
-    def query(self, pui: Pui) -> List[Pui]:
-        """Returns all the records in the database matching the passed pui upto
+    def query(self, row: Row) -> List[Row]:
+        """Returns all the records in the database matching the passed row upto
         wildcard characters.
 
         A wildcard character is a "*".  When the entire record is a wildcard, then that
         matches any record.  '*' as part of a longer string is not treated as a
         wildcard.
         """
-        return list(self._query(pui).keys())
+        return list(self._query(row).keys())
 
-    def pop(self, policy: Policy) -> List[Pui]:
+    def pop(self, policy: Policy) -> List[Row]:
         """Remove the records with the smallest timestamp, and return."""
         if len(self.db) == 0:
             raise BcException("Trying to pop from an empty DB")
 
-        match_policy = [(v, k) for k, v in self._query(pui(policy, "*", "*")).items()]
+        match_policy = [(v, k) for k, v in self._query(row(policy, "*", "*")).items()]
         min_time = sorted(match_policy, key=lambda x: x[0])[0][0]
         result = [k for (v, k) in match_policy if v == min_time]
 
@@ -59,21 +59,21 @@ class MockDatabase(bc.Database):
 
         return result
 
-    def pop_query(self, pui: Pui) -> List[Tuple[Pui, Time]]:
+    def pop_query(self, row: Row) -> List[Tuple[Row, Time]]:
         """Does the same as query, but removes the rows from the database.
 
         Also returns the timestamps with it.
         """
-        result = self._query(pui)
+        result = self._query(row)
         for k in result.keys():
             del self.db[k]
         return [(k, v) for k, v in result.items()]
 
-    def batch_load(self, rows: List[Tuple[Pui, Time]]) -> None:
+    def batch_load(self, rows: List[Tuple[Row, Time]]) -> None:
         """Put all these rows in the table with a timestamp"""
         for row in rows:
-            pui, ts = row
-            self.db[pui] = ts
+            row, ts = row
+            self.db[row] = ts
 
 
 class MockFileSystem(bc.FileSystem):
@@ -126,7 +126,7 @@ class BcEngineGenerator(object):
     def __init__(self):
         self.internet: Dict[Url, Html] = dict()
         self.files: Dict[Filename, str] = dict()
-        self.db: Dict[Pui, Time] = dict()
+        self.db: Dict[Row, Time] = dict()
 
     def add_website(self, url: Url, html: Html) -> "BcEngineGenerator":
         self.internet[url] = html
@@ -141,7 +141,7 @@ class BcEngineGenerator(object):
     def add_request(
         self, policy: Policy, url: Url, id: Id, ts: Time
     ) -> "BcEngineGenerator":
-        self.db[pui(policy, url, id)] = ts
+        self.db[row(policy, url, id)] = ts
         return self
 
     def build(self) -> policy_engine_class.BcEngine:
