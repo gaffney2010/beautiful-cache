@@ -123,7 +123,7 @@ class TestIdEndToEnd(unittest.TestCase):
         y2 = x.find_all("y")[1]
         z = y2.find("z")
 
-        self.assertEqual(x.id(), "html:0/body:0/x:0")
+        self.assertEqual(str(x.id()), "html:0/body:0/x:0")
         self.assertEqual(y1.id(), "html:0/body:0/x:0/y:0")
         self.assertEqual(y2.id(), "html:0/body:0/x:0/y:1")
         self.assertEqual(z.id(), "html:0/body:0/x:0/y:1/z:0")

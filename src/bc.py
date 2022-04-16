@@ -58,24 +58,25 @@ class CacheTag(object):
 
         result = list()
 
-        # TODO(#1): Move to tree_crawl
         vertical_cursor = self.tag
         while not shared_logic.is_root(vertical_cursor.parent):
+            # Name is this tag's name
             name = vertical_cursor.name
-            i = 0
 
+            # Index = # of previous_siblings have same name
+            i = 0
             horizontal_cursor = vertical_cursor
             while horizontal_cursor is not None:
                 horizontal_cursor = horizontal_cursor.previous_sibling
-                # Don't count the first time
                 if horizontal_cursor and horizontal_cursor.name == name:
                     i += 1
 
+            # Put them together for this layer's tag part
             this_entry = f"{name}:{i}"
             result.append(this_entry)
             vertical_cursor = vertical_cursor.parent
 
-        # TODO(#1): I don't like this.
+        # TODO: I don't like this, I don't even really understand it.
         result.append("html:0")
 
         return Id("/".join(reversed(result)))

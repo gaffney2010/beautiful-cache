@@ -125,24 +125,38 @@ def isolate_id(html: Html, id: Id) -> Html:
     return Html(_isolate(soup, id, 0))
 
 
-# TODO(#1): This could probably be split.
+def _get_common_prefix(ids: List[Id], en: int) -> Id:
+    """Asserts that the ids all have the first `en` elements in common, then returns
+    these elements as an Id."""
+    result = Id("")
+    for i in range(en):
+        # Check that we're in a valid state.  This can be removed if too slow.
+        for id in ids:
+            if i >= len(id) or id[i] != ids[0][i]:
+                raise BcException(f"Invalid set of ids in combine_ids: {ids}")
+
+        result += ids[0][i]
+
+    return result
+
+
+def _get_id_part(tag_name: str, counter: DefaultDict[str, int]) -> str:
+    """Will return the tag_name with index while updating index in-place"""
+    result = f"{tag_name}:{counter[tag_name]}"
+    counter[tag_name] += 1
+    return result
+
+
 def combine_ids(html: Html, ids: List[Id], id_mapper: Dict[Id, Id]) -> Html:
-    # TODO(#1): This probably needs a docstring
+    # TODO: This probably needs a docstring
     for id in ids:
         if not shared_logic.validate_id(id, html):
             raise BcException(f"Id {id} not valid for HTML")
 
-    def _combine(new_prefix: Id, working_ingredient, ids: List[Id], ind: int) -> str:
-        # TODO(#1): This probably needs a docstring
+    def _combine(
+        working_prefix: Id, working_ingredient, ids: List[Id], ind: int
+    ) -> str:
         nonlocal id_mapper
-
-        # Check that we're in a valid state.  This can be removed if too slow.
-        for i in range(ind):
-            for id in ids:
-                if i >= len(id) or id[i] != ids[0][i]:
-                    raise BcException(f"Invalid set of ids in combine_ids: {ids}")
-        # TODO: mypy doesn't like this.
-        old_prefix: List[str] = ids[0][:ind]  # Well-defined
 
         # If this is end for id, then we don't have keep descending, return the whole
         #  node.
@@ -151,9 +165,9 @@ def combine_ids(html: Html, ids: List[Id], id_mapper: Dict[Id, Id]) -> Html:
                 return trim(working_ingredient)
 
         # Convert to look up easier in next step
-        id_by_ingred = collections.defaultdict(list)
+        ids_by_ingred = collections.defaultdict(list)
         for id in ids:
-            id_by_ingred[id[ind]].append(id)
+            ids_by_ingred[id[ind]].append(id)
 
         result = [_st_tag(working_ingredient)]
 
@@ -165,13 +179,12 @@ def combine_ids(html: Html, ids: List[Id], id_mapper: Dict[Id, Id]) -> Html:
                 # Not a tag
                 continue
 
-            key = f"{ingred.name}:{tag_counter[ingred.name]}"
-            if key in id_by_ingred:
-                old_id = Id("/".join(old_prefix + [key]))
-                new_id = new_prefix + f"{ingred.name}:{used_tag_counter[ingred.name]}"
+            key = _get_id_part(ingred.name, tag_counter)
+            if key in ids_by_ingred:
+                old_id = _get_common_prefix(ids, ind) + key
+                new_id = working_prefix + _get_id_part(ingred.name, used_tag_counter)
                 id_mapper[old_id] = new_id
-                result.append(_combine(new_id, ingred, id_by_ingred[key], ind + 1))
-            tag_counter[ingred.name] += 1
+                result.append(_combine(new_id, ingred, ids_by_ingred[key], ind + 1))
 
         result.append(_en_tag(working_ingredient))
 

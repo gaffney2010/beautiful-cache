@@ -148,12 +148,13 @@ class TestCompaction(unittest.TestCase):
             engine.database.db,
             {
                 make_row("test_policy", "f1", "html:0/body:0/div:0/p:0/a:0"): 1,
-                make_row("test_policy", "f1", "html:0/body:0/div:0/p:0"): 2,
+                # Refers to the my_span part.  Used to be "html:0/body:0/div:0/p:2"
+                make_row("test_policy", "f1", "html:0/body:0/div:0/p:1"): 2,
                 make_row("test_policy", "f2", ""): Time(3),
             },
         )
 
-        # Slightly larger trim will remove second access record, leaving only p:2
+        # Slightly larger trim will remove second access record, leaving only p:1
         compaction.compact(
             "test_policy",
             settings={"max_bytes": 75, "strategy": "thin"},
@@ -163,9 +164,9 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.file_system.files,
             {
-                Filename(
-                    "test_policy/f1.data"
-                ): "<html><body><div><p><a>2</a></p></div></body></html>",
+                Filename("test_policy/f1.data"): (
+                    "<html><body><div><p>5 <span>my_span</span></p></div></body></html>"
+                ),
                 Filename("test_policy/f2.data"): "...",
             },
         )
