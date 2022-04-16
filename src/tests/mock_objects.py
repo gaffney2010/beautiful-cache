@@ -49,7 +49,9 @@ class MockDatabase(bc.Database):
         if len(self.db) == 0:
             raise BcException("Trying to pop from an empty DB")
 
-        match_policy = [(v, k) for k, v in self._query(make_row(policy, "*", "*")).items()]
+        match_policy = [
+            (v, k) for k, v in self._query(make_row(policy, "*", "*")).items()
+        ]
         min_time = sorted(match_policy, key=lambda x: x[0])[0][0]
         result = [k for (v, k) in match_policy if v == min_time]
 

@@ -13,13 +13,8 @@ def validate_id(id: Id, html: Html) -> bool:
     """Checks if the id correctly identifies an element in the html."""
     ingredient = bs4.BeautifulSoup(html, features="lxml")
 
-    for ind in range(len(id)):
-        id_part = id[ind]
-        id_part_parts = id_part.split(":")
-        l = len(id_part_parts)
-        if l != 2:
-            return False
-        tag, i = id_part_parts
+    for part in id:
+        tag, i = part.split(":")
         i = int(i)  # type: ignore
 
         try:

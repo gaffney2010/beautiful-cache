@@ -15,7 +15,14 @@ Url = NewType("Url", str)
 
 class Id(object):
     def __init__(self, id: str):
-        # TODO: Validate ID here.
+        # Validate ID
+        for part in id.split("/"):
+            if part == "":
+                continue
+            l = len(part.split(":"))
+            if l != 2:
+                raise BcException(f"Invalid id at creation {id}")
+
         self._id = id
         self._parts = id.split("/")
 
@@ -99,7 +106,9 @@ class Row(object):
         return policy_match and url_match and id_match
 
 
-def make_row(policy: Union[Policy, str], url: Union[Url, str], id: Union[Id, str]) -> Row:
+def make_row(
+    policy: Union[Policy, str], url: Union[Url, str], id: Union[Id, str]
+) -> Row:
     # Convenient wrapper, I sup'ose
     if isinstance(id, Id):
         id = str(id)
