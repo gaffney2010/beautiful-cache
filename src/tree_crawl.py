@@ -66,21 +66,16 @@ def trim_html(html: Html) -> Html:
 
 
 def common_ancestor(ids: List[Id]) -> Id:
-    # TODO: This doesn't need to be a subfunction.  I don't know why this happened.
-    def _common_ancestors(ids: List[Id]) -> List[str]:
-        """Make a sub functions for those lovely return statements"""
-        common_ancestors: List[str] = list()
-        for i in range(len(ids[0])):
-            # Check that all match
-            for id in ids:
-                if i >= len(id):
-                    return common_ancestors
-                if id[i] != ids[0][i]:
-                    return common_ancestors
-            common_ancestors.append(ids[0][i])
-        return common_ancestors
-
-    return Id("/".join(_common_ancestors(ids)))
+    ca = Id("")
+    for i in range(len(ids[0])):
+        # Check that all match
+        for id in ids:
+            if i >= len(id):
+                return ca
+            if id[i] != ids[0][i]:
+                return ca
+        ca += ids[0][i]
+    return ca
 
 
 def mask_id(id: Id, mask: Id) -> Id:

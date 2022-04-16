@@ -70,6 +70,7 @@ class Id(object):
             else:
                 self._id = "/".join([self._id, other])
                 self._parts += other.split("/")
+            return self
         if isinstance(other, Id):
             if self._id == "":
                 self._id = other._id
@@ -79,6 +80,7 @@ class Id(object):
             else:
                 self._id = "/".join([self._id, other._id])
                 self._parts += other._parts
+            return self
         raise Exception(f"Unexpected type for id: {type(other)}")
 
 

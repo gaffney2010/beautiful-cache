@@ -136,7 +136,6 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.file_system.files,
             {
-                # TODO: Why do I have div twice and body once?
                 Filename("test_policy/f1.data"): (
                     "<html><body><div><p><a>2</a></p><p>5 <span>my_span</span></p>"
                     "</div></body></html>"
@@ -259,7 +258,6 @@ class TestCompaction(unittest.TestCase):
 
         beg = BcEngineGenerator()
 
-        # TODO: Consistent typing in tests...
         beg.add_file("test_policy/f1.data", tree_crawl.trim_html(html))
 
         beg.add_request("test_policy", "f1", "", 0)
