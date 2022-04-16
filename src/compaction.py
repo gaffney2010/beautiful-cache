@@ -16,15 +16,14 @@ def compact_fat(policy: Policy, url: Url, engine: BcEngine) -> None:
     # TODO(#2.5): I should probably just make pop_query return a dict.  Ditto
     #  batch_write.
     rows = engine.database.pop_query(make_row(policy, url, "*"))
-    # TODO(#1): Replace with a function so that we're less like to make a conversion error.
-    #  TODO(#1): Find other conversions to Id or to str
+    # TODO(#6): Replace with a function so that we're less like to make a conversion error.
+    #  TODO(#6): Find other conversions to Id or to str
     row_by_id = {Id(k.id): v for k, v in rows}
     ids = list(row_by_id.keys())
     ca = tree_crawl.common_ancestor(ids)
 
     # Update the cache file
     html = engine.file_system.read(policy, url)
-    # TODO(#1): Make it clear in documentation that write overwrites.
     engine.file_system.write(policy, url, tree_crawl.isolate_id(html, ca))
 
     # Update the Requests to contain new addresses

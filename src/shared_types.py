@@ -178,6 +178,7 @@ class FileSystem(object):
         raise NotImplementedError
 
     def write(self, policy: Policy, url: Url, content: str) -> None:
+        """Write will always overwrite."""
         raise NotImplementedError
 
     def exists(self, policy: Policy, url: Url) -> bool:

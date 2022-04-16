@@ -91,7 +91,7 @@ def mask_id(id: Id, mask: Id) -> Id:
     # TODO: mypy doesn't like this.
     for i, xi in enumerate(mask):
         assert xi == id[i]
-        tag, _ = xi.split(":")
+        tag, _ = shared_logic.split_id_part(xi)
         result.append(f"{tag}:0")
     # TODO: Add test where id==mask
     # TODO: mypy doesn't like this.
@@ -104,21 +104,18 @@ def isolate_id(html: Html, id: Id) -> Html:
     if not shared_logic.validate_id(id, html):
         raise BcException(f"Id {id} not valid for HTML")
 
-    def _isolate(working_ingredient, id: Id, ind: int) -> str:
+    def _isolate(working_ingredient: Ingredient, id: Id, ind: int) -> str:
+        """Returns working_ingredient with its own tag on only the passed id as
+        children."""
+        # Base case
         if ind == len(id):
             return trim(working_ingredient)
 
         # Find the right ingredient
-        tag, i = id[ind].split(":")
-        # Validity of id checked alredy
-        i = int(i)  # type: ignore
-        working_ingredient = working_ingredient.find_all(tag)[i]
+        tag, i = shared_logic.split_id_part(id[ind])
+        child_ingredient = working_ingredient.find_all(tag)[i]
 
-        # TODO(#1): I hate this.
-        # Handle next to base case special
-        desc = _isolate(working_ingredient, id, ind + 1)
-        if ind + 1 == len(id):
-            return desc
+        desc = _isolate(child_ingredient, id, ind + 1)
         return _st_tag(working_ingredient) + desc + _en_tag(working_ingredient)
 
     soup = bs4.BeautifulSoup(html, features="lxml")
