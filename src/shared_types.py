@@ -15,6 +15,7 @@ Url = NewType("Url", str)
 
 class Id(object):
     def __init__(self, id: str):
+        # TODO: Validate ID here.
         self._id = id
         self._parts = id.split("/")
 

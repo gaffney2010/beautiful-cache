@@ -66,8 +66,6 @@ def trim_html(html: Html) -> Html:
 
 
 def common_ancestor(ids: List[Id]) -> Id:
-    # TODO: Id checks
-
     # TODO: This doesn't need to be a subfunction.  I don't know why this happened.
     def _common_ancestors(ids: List[Id]) -> List[str]:
         """Make a sub functions for those lovely return statements"""
@@ -108,8 +106,8 @@ def mask_id(id: Id, mask: Id) -> Id:
 
 
 def isolate_id(html: Html, id: Id) -> Html:
-    # TODO: Consider making this validity check also thing that converts.
-    # TODO: Make a global id valid checker, lru cache it.
+    if not shared_logic.validate_id(id, html):
+        raise BcException(f"Id {id} not valid for HTML")
 
     def _isolate(working_ingredient, id: Id, ind: int) -> str:
         if ind == len(id):
@@ -135,7 +133,9 @@ def isolate_id(html: Html, id: Id) -> Html:
 # TODO: This could probably be split.
 def combine_ids(html: Html, ids: List[Id], id_mapper: Dict[Id, Id]) -> Html:
     # TODO: This probably needs a docstring
-    # TODO: Id checks
+    for id in ids:
+        if not shared_logic.validate_id(id, html):
+            raise BcException(f"Id {id} not valid for HTML")
 
     def _combine(new_prefix: Id, working_ingredient, ids: List[Id], ind: int) -> str:
         # TODO: This probably needs a docstring
