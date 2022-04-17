@@ -1,4 +1,5 @@
 from typing import Dict, Optional, Tuple
+from wsgiref.headers import tspecials
 
 import bc
 import policy_engine_class
@@ -44,8 +45,11 @@ class MockDatabase(bc.Database):
         """
         return list(self._query(row).keys())
 
-    def pop(self, policy: Policy) -> List[Row]:
-        """Remove the records with the smallest timestamp, and return."""
+    def pop(self, policy: Policy, record: Optional[CompactionRecord] = None) -> Row:
+        """Remove the records with the smallest timestamp and return.
+        
+        Additional recording if record is passed in.
+        """
         if len(self.db) == 0:
             raise BcException("Trying to pop from an empty DB")
 
@@ -58,6 +62,11 @@ class MockDatabase(bc.Database):
         # Removing motion
         for r in result:
             del self.db[r]
+        
+        # Record, if record passed in.
+        if record is not None:
+            record.delete_through = min_time
+            record.records_deleted += result
 
         return result
 

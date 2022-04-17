@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from policy_engine_class import BcEngine  # type: ignore
 from shared_types import *
@@ -6,13 +6,13 @@ import tree_crawl
 
 
 # TODO(#3): Can I just set BcEngine globally with a singleton or something?
-def compact_all(policy: Policy, url: Url, engine: BcEngine) -> None:
+def compact_all(policy: Policy, url: Url, engine: BcEngine, _: CompactionRecord) -> None:
     if len(engine.database.query(make_row(policy, url, "*"))) == 0:
         # Safe to delete file.
         engine.file_system.delete(policy, url)
 
 
-def compact_fat(policy: Policy, url: Url, engine: BcEngine) -> None:
+def compact_fat(policy: Policy, url: Url, engine: BcEngine, record: CompactionRecord) -> None:
     # TODO(#2.5): I should probably just make pop_query return a dict.  Ditto
     #  batch_write.
     rows = engine.database.pop_query(make_row(policy, url, "*"))
@@ -31,10 +31,11 @@ def compact_fat(policy: Policy, url: Url, engine: BcEngine) -> None:
     new_rows = list()
     for old, new in zip(ids, new_ids):
         new_rows.append((make_row(policy, url, new), row_by_id[old]))
+    record.records_added = new_rows
     engine.database.batch_load(new_rows)
 
 
-def compact_thin(policy: Policy, url: Url, engine: BcEngine) -> None:
+def compact_thin(policy: Policy, url: Url, engine: BcEngine, record: CompactionRecord) -> None:
     rows = engine.database.pop_query(make_row(policy, url, "*"))
     row_by_id = {Id(k.id): v for k, v in rows}
     ids = list(row_by_id.keys())
@@ -49,6 +50,7 @@ def compact_thin(policy: Policy, url: Url, engine: BcEngine) -> None:
     for old in ids:
         new = id_mapper[old]
         new_rows.append((make_row(policy, url, new), row_by_id[old]))
+    record.records_added = new_rows
     engine.database.batch_load(new_rows)
 
 
@@ -73,9 +75,17 @@ def compact(policy: Policy, settings: Dict[str, Any], engine: BcEngine) -> None:
     else:
         raise BcException(f"Unknown compaction strategy: {strategy}")
 
+    record = CompactionRecord()
+
+    size_before = engine.file_system.size(policy)
+
     max_bytes = settings["max_bytes"]
     while engine.file_system.size(policy) > max_bytes:
-        newly_deleted = engine.database.pop(policy)
+        newly_deleted = engine.database.pop(policy, record)
         affected_urls = {row.url for row in newly_deleted}
+        record.affected_urls = affected_urls
         for url in affected_urls:
-            file_compaction(policy, url, engine)
+            file_compaction(policy, url, engine, record)
+
+    size_after = engine.file_system.size(policy)
+    record.size_delta = size_before - size_after

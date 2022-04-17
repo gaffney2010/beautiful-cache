@@ -1,5 +1,5 @@
 import os
-from typing import Any, List, NewType, Tuple, Union
+from typing import Any, List, NewType, Optional, Tuple, Union
 
 import attr
 
@@ -108,6 +108,16 @@ class Row(object):
         return policy_match and url_match and id_match
 
 
+@attr.s()
+class CompactionRecord(object):
+    delete_through: Optional[Time] = attr.ib(default=None)
+    records_deleted: List[Row] = attr.ib(default=attr.Factory(list))
+    affected_urls: List[Url] = attr.ib(default=attr.Factory(list))
+    records_added: List[Row] = attr.ib(default=attr.Factory(list))
+    size_delta: Optional[Bytes] = attr.ib(default=None)
+    message: Optional[str] = attr.ib(default=None)
+
+
 def make_row(
     policy: Union[Policy, str], url: Union[Url, str], id: Union[Id, str]
 ) -> Row:
@@ -146,8 +156,11 @@ class Database(object):
         """
         raise NotImplementedError
 
-    def pop(self, policy: Policy) -> List[Row]:
-        """Remove the records with the smallest timestamp, and return."""
+    def pop(self, policy: Policy, record: Optional[CompactionRecord] = None) -> Row:
+        """Remove the records with the smallest timestamp and return.
+        
+        Additional recording if record is passed in.
+        """
         raise NotImplementedError
 
     def pop_query(self, row: Row) -> List[Tuple[Row, Time]]:
