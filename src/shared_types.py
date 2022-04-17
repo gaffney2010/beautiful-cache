@@ -10,7 +10,22 @@ Html = NewType("Html", str)
 Ingredient = Any  # Can be bs4.soup or bs4.tag.  Update later.
 Policy = NewType("Policy", str)
 Time = NewType("Time", int)  # TODO: What is this?  Ms since epoch?
-Url = NewType("Url", str)
+
+
+class Url(object):
+    """I do this so that I can isinstance in the filesystem.
+
+    I may have to do this with other custom types."""
+
+    def __init__(self, x: str):
+        self._x = x
+
+    def __str__(self) -> str:
+        return self._x
+
+    # TODO: Consider implementing
+    # def __hash__(self):
+    #     return hash(self._x)
 
 
 class Id(object):
@@ -96,8 +111,8 @@ class Row(object):
     """
 
     policy: Policy = attr.ib()
-    url: Url = attr.ib()
-    # We store as a string, because this is designed for database storage
+    # We store as strings, because this is designed for database storage
+    url: str = attr.ib()
     id: str = attr.ib()
 
 
@@ -117,7 +132,9 @@ def make_row(
     # Convenient wrapper, I sup'ose
     if isinstance(id, Id):
         id = str(id)
-    return Row(policy=Policy(policy), url=Url(url), id=id)
+    if isinstance(url, Url):
+        url = str(url)
+    return Row(policy=Policy(policy), url=url, id=id)
 
 
 # Make a bunch of abstract base classes.
@@ -173,20 +190,40 @@ class FileSystem(object):
 
     def _key(self, policy: Policy, url: Url) -> Filename:
         """This is what maps a URL to a filename"""
-        return os.path.join(policy, url.replace("/", "") + ".data")
+        return os.path.join(policy, str(url).replace("/", "") + ".data")
 
-    def read(self, policy: Policy, url: Url) -> str:
+    def _read_fn(self, policy: Policy, fn: Filename) -> str:
         raise NotImplementedError
 
-    def write(self, policy: Policy, url: Url, content: str) -> None:
+    def read(self, policy: Policy, fn: Union[Filename, Url]) -> str:
+        if isinstance(fn, Url):
+            fn = self._key(policy, fn)
+        return self._read_fn(policy, fn)
+
+    def _write_fn(self, policy: Policy, fn: Filename, content: str) -> None:
+        raise NotImplementedError
+
+    def write(self, policy: Policy, fn: Union[Filename, Url], content: str) -> None:
         """Write will always overwrite."""
+        if isinstance(fn, Url):
+            fn = self._key(policy, fn)
+        self._write_fn(policy, fn, content)
+
+    def _exists_fn(self, policy: Policy, fn: Filename) -> bool:
         raise NotImplementedError
 
-    def exists(self, policy: Policy, url: Url) -> bool:
+    def exists(self, policy: Policy, fn: Union[Filename, Url]) -> bool:
+        if isinstance(fn, Url):
+            fn = self._key(policy, fn)
+        return self._exists_fn(policy, fn)
+
+    def _delete_fn(self, policy: Policy, fn: Filename) -> None:
         raise NotImplementedError
 
-    def delete(self, policy: Policy, url: Url) -> None:
-        raise NotImplementedError
+    def delete(self, policy: Policy, fn: Union[Filename, Url]) -> None:
+        if isinstance(fn, Url):
+            fn = self._key(policy, fn)
+        self._delete_fn(policy, fn)
 
 
 class Clock(object):

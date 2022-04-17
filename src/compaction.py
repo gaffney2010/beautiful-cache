@@ -8,7 +8,6 @@ import tree_crawl
 #  TODO(#6): Audit conversions between Id and str
 
 
-# TODO(#3): Can I just set BcEngine globally with a singleton or something?
 def compact_all(
     policy: Policy, url: Url, engine: BcEngine, record: CompactionRecord
 ) -> None:

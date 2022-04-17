@@ -15,7 +15,7 @@ class MockUrlReader(bc.UrlReader):
         super().__init__()
 
     def _read(self, url: Url) -> Html:
-        return self.internet[url]
+        return self.internet[str(url)]
 
 
 class MockDatabase(bc.Database):
@@ -31,7 +31,8 @@ class MockDatabase(bc.Database):
     def _query(self, policy: Policy, url: Optional[Url] = None) -> Dict[Row, Time]:
         result = dict()
         for k, v in self.db.items():
-            if k.policy == policy and (url is None or k.url == url):
+            # TODO: Consider overloading equality on url.
+            if k.policy == policy and (url is None or k.url == str(url)):
                 result[k] = v
         return result
 
@@ -62,7 +63,7 @@ class MockDatabase(bc.Database):
             record.delete_through = min_time
             record.records_deleted += result
 
-        return {row.url for row in result}
+        return {Url(row.url) for row in result}
 
     def pop_query(self, policy: Policy, url: Url) -> Dict[Id, Time]:
         """Does the same as query, but removes the rows from the database.
@@ -88,26 +89,26 @@ class MockFileSystem(bc.FileSystem):
             self.files = dict()
         super().__init__()
 
-    def read(self, policy: Policy, url: Url) -> str:
+    def _read_fn(self, policy: Policy, fn: Filename) -> str:
         try:
-            result = self.files[self._key(policy, url)]
+            result = self.files[fn]
         except KeyError:
             raise BcException(f"Trying to read mock file that doesn't exist: {fn}")
 
         return result
 
-    def write(self, policy: Policy, url: Url, content: str) -> None:
-        self.files[self._key(policy, url)] = content
+    def _write_fn(self, policy: Policy, fn: Filename, content: str) -> None:
+        self.files[fn] = content
 
-    def exists(self, policy: Policy, url: Url) -> bool:
-        return self._key(policy, url) in self.files
+    def _exists_fn(self, policy: Policy, fn: Filename) -> bool:
+        return fn in self.files
 
     def size(self, policy: Policy) -> Bytes:
         # Just count characters for tests.
         return Bytes(sum(len(content) for content in self.files.values()))
 
-    def delete(self, policy: Policy, url: Url) -> None:
-        del self.files[self._key(policy, url)]
+    def _delete_fn(self, policy: Policy, fn: Filename) -> None:
+        del self.files[fn]
 
 
 class MockClock(bc.Clock):
@@ -134,7 +135,7 @@ class BcEngineGenerator(object):
         self.db: Dict[Row, Time] = dict()
 
     def add_website(self, url: Url, html: Html) -> "BcEngineGenerator":
-        self.internet[url] = html
+        self.internet[str(url)] = html
         return self
 
     def add_file(self, fn: Filename, text: str) -> "BcEngineGenerator":

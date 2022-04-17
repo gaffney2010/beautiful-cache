@@ -9,7 +9,6 @@ import shared_logic
 from shared_types import *
 
 
-# TODO(#3): Should I make a policy/filename variable?
 class CacheTag(object):
     def __init__(
         self,
