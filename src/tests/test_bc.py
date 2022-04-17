@@ -94,7 +94,38 @@ class TestEndToEnd(unittest.TestCase):
             {make_row("test_policy", "test_url", "html:0/body:0/tag:0"): 0},
         )
 
-    # TODO: Make tests for multiple policies.
+    def test_multiple_policies_happy_path(self):
+        example_html_1 = Html("<html><body>Page 1</body</html>")
+        example_html_2 = Html("<html><body>Page 2</body</html>")
+
+        engine = (
+            BcEngineGenerator()
+            .add_website(Url("test_url_1"), example_html_1)
+            .add_website(Url("test_url_2"), example_html_2)
+            .build()
+        )
+
+        # Should be able to inject engines like this
+        _ = bc.BeautifulCache(Url("test_url_1"), Policy("test_policy_1"), engine=engine)
+        _ = bc.BeautifulCache(Url("test_url_2"), Policy("test_policy_2"), engine=engine)
+
+        # These live in different directories.
+        self.assertDictEqual(
+            engine.file_system.files,
+            {
+                "test_policy_1/test_url_1.data": tree_crawl.trim_html(example_html_1),
+                "test_policy_2/test_url_2.data": tree_crawl.trim_html(example_html_2),
+            },
+        )
+
+        # In practice, these will live in separate databases.
+        self.assertDictEqual(
+            engine.database.db,
+            {
+                make_row("test_policy_1", "test_url_1", ""): 0,
+                make_row("test_policy_2", "test_url_2", ""): 0,
+            },
+        )
 
 
 #     # TODO: This needs to be done with a real db
