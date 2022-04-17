@@ -2,4 +2,5 @@ attrs
 beautifulsoup4
 lxml
 overload
+pyyaml
 -e .

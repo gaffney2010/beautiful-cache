@@ -1,5 +1,7 @@
 from typing import Any, Dict, Optional
 
+import yaml  # type: ignore
+
 from policy_engine_class import BcEngine  # type: ignore
 from shared_types import *
 import tree_crawl
@@ -62,7 +64,12 @@ def compact_thin(
 def compact(
     policy: Policy, settings: Dict[str, Any], engine: BcEngine
 ) -> CompactionRecord:
-    # TODO(#4): Fill in settings blanks from yaml.
+    if engine.file_system.exists(policy, "settings.yaml"):
+        y = yaml.safe_load(engine.file_system.read("settings.yaml"))
+        for field in ("max_bytes", "strategy"):
+            # Don't overwrite, only fill-in
+            if field in y and field not in settings:
+                settings[field] = y[field]
 
     for required_field in ("max_bytes", "strategy"):
         if required_field not in settings:
