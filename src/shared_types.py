@@ -1,5 +1,5 @@
 import os
-from typing import Any, List, NewType, Optional, Tuple, Union
+from typing import Any, List, NewType, Optional, Set, Tuple, Union
 
 import attr
 
@@ -31,6 +31,9 @@ class Id(object):
 
     def __getitem__(self, ind: int) -> str:
         return self._parts[ind]
+
+    def __iter__(self):
+        yield from self._parts
 
     def __len__(self) -> int:
         return len(self._parts)
@@ -112,7 +115,7 @@ class Row(object):
 class CompactionRecord(object):
     delete_through: Optional[Time] = attr.ib(default=None)
     records_deleted: List[Row] = attr.ib(default=attr.Factory(list))
-    affected_urls: List[Url] = attr.ib(default=attr.Factory(list))
+    affected_urls: Set[Url] = attr.ib(default=attr.Factory(set))
     records_added: List[Row] = attr.ib(default=attr.Factory(list))
     size_delta: Optional[Bytes] = attr.ib(default=None)
     message: Optional[str] = attr.ib(default=None)

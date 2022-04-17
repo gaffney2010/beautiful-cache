@@ -6,7 +6,7 @@ import tree_crawl
 
 
 # TODO(#3): Can I just set BcEngine globally with a singleton or something?
-def compact_all(policy: Policy, url: Url, engine: BcEngine, _: CompactionRecord) -> None:
+def compact_all(policy: Policy, url: Url, engine: BcEngine, record: CompactionRecord) -> None:
     if len(engine.database.query(make_row(policy, url, "*"))) == 0:
         # Safe to delete file.
         engine.file_system.delete(policy, url)
@@ -30,8 +30,9 @@ def compact_fat(policy: Policy, url: Url, engine: BcEngine, record: CompactionRe
     new_ids = [tree_crawl.mask_id(id, ca) for id in ids]
     new_rows = list()
     for old, new in zip(ids, new_ids):
-        new_rows.append((make_row(policy, url, new), row_by_id[old]))
-    record.records_added = new_rows
+        new_row = make_row(policy, url, new)
+        record.records_added.append(new_row)
+        new_rows.append((new_row, row_by_id[old]))
     engine.database.batch_load(new_rows)
 
 
@@ -49,8 +50,9 @@ def compact_thin(policy: Policy, url: Url, engine: BcEngine, record: CompactionR
     new_rows = list()
     for old in ids:
         new = id_mapper[old]
-        new_rows.append((make_row(policy, url, new), row_by_id[old]))
-    record.records_added = new_rows
+        new_row = make_row(policy, url, new)
+        record.records_added.append(new_row)
+        new_rows.append((new_row, row_by_id[old]))
     engine.database.batch_load(new_rows)
 
 
