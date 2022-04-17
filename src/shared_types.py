@@ -12,20 +12,16 @@ Policy = NewType("Policy", str)
 Time = NewType("Time", int)  # TODO: What is this?  Ms since epoch?
 
 
+@attr.s(frozen=True)
 class Url(object):
     """I do this so that I can isinstance in the filesystem.
 
     I may have to do this with other custom types."""
 
-    def __init__(self, x: str):
-        self._x = x
+    _x: str = attr.ib()
 
     def __str__(self) -> str:
         return self._x
-
-    # TODO: Consider implementing
-    # def __hash__(self):
-    #     return hash(self._x)
 
 
 class Id(object):
@@ -115,15 +111,9 @@ class Row(object):
     url: str = attr.ib()
     id: str = attr.ib()
 
-
-@attr.s()
-class CompactionRecord(object):
-    delete_through: Optional[Time] = attr.ib(default=None)
-    records_deleted: List[Row] = attr.ib(default=attr.Factory(list))
-    affected_urls: Set[Url] = attr.ib(default=attr.Factory(set))
-    records_added: List[Row] = attr.ib(default=attr.Factory(list))
-    size_delta: Optional[Bytes] = attr.ib(default=None)
-    message: Optional[str] = attr.ib(default=None)
+    def get_url(self) -> Url:
+        """Handles the cast to Url."""
+        return Url(self.url)
 
 
 def make_row(
@@ -135,6 +125,16 @@ def make_row(
     if isinstance(url, Url):
         url = str(url)
     return Row(policy=Policy(policy), url=url, id=id)
+
+
+@attr.s()
+class CompactionRecord(object):
+    delete_through: Optional[Time] = attr.ib(default=None)
+    records_deleted: List[Row] = attr.ib(default=attr.Factory(list))
+    affected_urls: Set[Url] = attr.ib(default=attr.Factory(set))
+    records_added: List[Row] = attr.ib(default=attr.Factory(list))
+    size_delta: Optional[Bytes] = attr.ib(default=None)
+    message: Optional[str] = attr.ib(default=None)
 
 
 # Make a bunch of abstract base classes.

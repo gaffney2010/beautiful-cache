@@ -31,8 +31,7 @@ class MockDatabase(bc.Database):
     def _query(self, policy: Policy, url: Optional[Url] = None) -> Dict[Row, Time]:
         result = dict()
         for k, v in self.db.items():
-            # TODO: Consider overloading equality on url.
-            if k.policy == policy and (url is None or k.url == str(url)):
+            if k.policy == policy and (url is None or k.get_url() == url):
                 result[k] = v
         return result
 
@@ -63,7 +62,7 @@ class MockDatabase(bc.Database):
             record.delete_through = min_time
             record.records_deleted += result
 
-        return {Url(row.url) for row in result}
+        return {row.get_url() for row in result}
 
     def pop_query(self, policy: Policy, url: Url) -> Dict[Id, Time]:
         """Does the same as query, but removes the rows from the database.
