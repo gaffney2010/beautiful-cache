@@ -28,10 +28,10 @@ class MockDatabase(bc.Database):
     def _append(self, row: Row, ts: Time) -> None:
         self.db[row] = ts
 
-    def _query(self, row: Row) -> Dict[Row, Time]:
+    def _query(self, policy: Policy, url: Optional[Url] = None) -> Dict[Row, Time]:
         result = dict()
         for k, v in self.db.items():
-            if k.match(row):
+            if k.policy == policy and (url is None or k.url == url):
                 result[k] = v
         return result
 
@@ -43,7 +43,7 @@ class MockDatabase(bc.Database):
         matches any record.  '*' as part of a longer string is not treated as a
         wildcard.
         """
-        return len(self._query(make_row(policy, url, "*"))) > 0
+        return len(self._query(policy, url)) > 0
 
     def pop(
         self, policy: Policy, record: Optional[CompactionRecord] = None
@@ -55,9 +55,7 @@ class MockDatabase(bc.Database):
         if len(self.db) == 0:
             raise BcException("Trying to pop from an empty DB")
 
-        match_policy = [
-            (v, k) for k, v in self._query(make_row(policy, "*", "*")).items()
-        ]
+        match_policy = [(v, k) for k, v in self._query(policy).items()]
         min_time = sorted(match_policy, key=lambda x: x[0])[0][0]
         result = [k for (v, k) in match_policy if v == min_time]
 
@@ -77,7 +75,7 @@ class MockDatabase(bc.Database):
 
         Also returns the timestamps with it.
         """
-        result = self._query(make_row(policy, url, "*"))
+        result = self._query(policy, url)
         for k in result.keys():
             del self.db[k]
         return {Id(k.id): v for k, v in result.items()}
