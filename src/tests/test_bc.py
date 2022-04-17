@@ -155,6 +155,37 @@ class TestEndToEnd(unittest.TestCase):
             },
         )
 
+    def test_multiple_policies_with_materializtions(self):
+        example_html_1 = Html("<html><body>Page 1 <b>A</b><b><B</b></body</html>")
+
+        engine = (
+            BcEngineGenerator().add_website(Url("test_url_1"), example_html_1).build()
+        )
+
+        # Download to both policies
+        soup_1 = bc.BeautifulCache(
+            Url("test_url_1"), Policy("test_policy_1"), engine=engine
+        )
+        soup_2 = bc.BeautifulCache(
+            Url("test_url_1"), Policy("test_policy_2"), engine=engine
+        )
+
+        # Materialize on different policies
+        engine.clock.tick()
+        soup_1.find_all("b")[0].materialize()
+        soup_2.find_all("b")[1].materialize()
+
+        # Records to different policies
+        self.assertDictEqual(
+            engine.database.db,
+            {
+                make_row("test_policy_1", "test_url_1", ""): 0,
+                make_row("test_policy_2", "test_url_1", ""): 0,
+                make_row("test_policy_1", "test_url_1", "html:0/body:0/b:0"): 1,
+                make_row("test_policy_2", "test_url_1", "html:0/body:0/b:1"): 1,
+            },
+        )
+
 
 #     # TODO: This needs to be done with a real db
 #     # def test_upserts_overwrite(self):
