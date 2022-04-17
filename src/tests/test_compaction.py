@@ -330,5 +330,48 @@ class TestCompaction(unittest.TestCase):
         pass
 
     def test_multiple_policies(self):
-        # TODO:
-        pass
+        html = """
+            <html>
+            <head></head>
+            <body>
+                <div>
+                    <p><a>1</a><a>2</a></p>
+                    <p><a>3</a><a>4</a></p>
+                    <p>5 <span>my_span</span></p>
+                </div>
+                <div>
+                    <p><a>6</a> 7 and beyond</p>
+                </div>
+            </body>
+            </html>"""
+
+        beg = BcEngineGenerator()
+
+        # TODO: Consistent typing in tests...
+        beg.add_file("test_policy_1/f1.data", tree_crawl.trim_html(html))
+        beg.add_file("test_policy_2/f1.data", tree_crawl.trim_html(html))
+
+        beg.add_request("test_policy_1", "f1", "", 0)
+        beg.add_request("test_policy_1", "f1", "html:0/body:0/div:0/p:0/a:1", 1)
+        beg.add_request("test_policy_1", "f1", "html:0/body:0/div:0/p:2", 2)
+        beg.add_request("test_policy_2", "f1", "", 10)
+        beg.add_request("test_policy_2", "f1", "html:0/body:0/div:0/p:0/a:1", 11)
+        beg.add_request("test_policy_2", "f1", "html:0/body:0/div:0/p:2", 12)
+
+        engine = beg.build()
+
+        compaction.compact(
+            "test_policy_2",
+            settings={"max_bytes": 75, "strategy": "thin"},
+            engine=engine,
+        )
+
+        self.assertDictEqual(
+            engine.database.db,
+            {
+                make_row("test_policy_1", "f1", ""): 0,
+                make_row("test_policy_1", "f1", "html:0/body:0/div:0/p:0/a:1"): 1,
+                make_row("test_policy_1", "f1", "html:0/body:0/div:0/p:2"): 2,
+                make_row("test_policy_2", "f1", "html:0/body:0/div:0/p:0"): 12,
+            },
+        )

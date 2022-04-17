@@ -3,8 +3,6 @@ Caching Wrapper for BeautifulSoup.
 
 The library includes some compaction logic, which is an operation you can run to delete unused parts of webpages.  See details below.
 
-Work in progress - the below isn't implemented yet.
-
 ## Policy
 A policy refers to a set of URLs that share a memory space.  They are named by the directory where the files are saved.
 
@@ -99,8 +97,9 @@ Compaction works by repeatedly deleting the oldest records in the Requests datab
 
 When a cache compacts a file by the strategy above, it saves the resulting small HTML as a flat file by saving the str cast of the BeautifulSoup file.
 
-## Cache misses and Transactions.
-Whenever tags are accessed, and these don't exist, we assume that they were erased by compaction.  We re-download the URL, and try to find the tag again before returning an error.
+## Transactions.
+
+TODO: Implement transactions.
 
 Some queries could fail subtly if a partial compaction occurs.
 

@@ -35,7 +35,7 @@ class MockDatabase(bc.Database):
                 result[k] = v
         return result
 
-    def exists(self, policy: Policy, url: Url) -> bool:
+    def exists(self, policy: Policy, url: Optional[Url] = None) -> bool:
         """Returns true if any records with the policy/url."""
         return len(self._query(policy, url)) > 0
 
@@ -46,7 +46,7 @@ class MockDatabase(bc.Database):
 
         Additional recording to record if it's passed in.
         """
-        if len(self.db) == 0:
+        if not self.exists(policy):
             raise BcException("Trying to pop from an empty DB")
 
         match_policy = [(v, k) for k, v in self._query(policy).items()]
@@ -104,7 +104,13 @@ class MockFileSystem(bc.FileSystem):
 
     def size(self, policy: Policy) -> Bytes:
         # Just count characters for tests.
-        return Bytes(sum(len(content) for content in self.files.values()))
+        return Bytes(
+            sum(
+                len(content)
+                for fn, content in self.files.items()
+                if fn.split("/")[0] == policy
+            )
+        )
 
     def _delete_fn(self, policy: Policy, fn: Filename) -> None:
         del self.files[fn]
