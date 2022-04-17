@@ -12,7 +12,7 @@ import tree_crawl
 def compact_all(
     policy: Policy, url: Url, engine: BcEngine, record: CompactionRecord
 ) -> None:
-    if not engine.database.query(policy, url):
+    if not engine.database.exists(policy, url):
         # Safe to delete file.
         engine.file_system.delete(policy, url)
 

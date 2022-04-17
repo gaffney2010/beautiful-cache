@@ -89,6 +89,12 @@ class Id(object):
 
 @attr.s(frozen=True)
 class Row(object):
+    """Represents row keys in the database.
+
+    A database row also has timestamps, but we've chosen to keep these separate, to
+    emphasize the other fields' role as unique identifier.
+    """
+
     policy: Policy = attr.ib()
     url: Url = attr.ib()
     # We store as a string, because this is designed for database storage
@@ -133,7 +139,6 @@ class Database(object):
     def _append(self, row: Row, ts: Time) -> None:
         raise NotImplementedError
 
-    # TODO(#3): Rename methods
     def pop(
         self, policy: Policy, record: Optional[CompactionRecord] = None
     ) -> Set[Url]:
@@ -143,24 +148,16 @@ class Database(object):
         """
         raise NotImplementedError
 
-    def query(self, policy: Policy, url: Url) -> bool:
-        """Returns all the records in the database matching the passed row upto
-        wildcard characters.
-
-        A wildcard character is a "*".  When the entire record is a wildcard, then that
-        matches any record.  '*' as part of a longer string is not treated as a
-        wildcard.
-        """
+    def exists(self, policy: Policy, url: Url) -> bool:
+        """Returns true if any records with the policy/url."""
         raise NotImplementedError
 
     def pop_query(self, policy: Policy, url: Url) -> Dict[Id, Time]:
-        """Does the same as query, but removes the rows from the database.
-
-        Also returns the timestamps with it.
+        """Deletes all records with the given policy/url.  Returns the IDs/timestamps
+        for the deleted rows.
         """
         raise NotImplementedError
 
-    # TODO(#3): Maybe row should contain time.
     def batch_load(self, rows: List[Tuple[Row, Time]]) -> None:
         """Put all these rows in the table with a timestamp"""
         raise NotImplementedError

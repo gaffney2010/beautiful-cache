@@ -35,14 +35,8 @@ class MockDatabase(bc.Database):
                 result[k] = v
         return result
 
-    def query(self, policy: Policy, url: Url) -> bool:
-        """Returns all the records in the database matching the passed row upto
-        wildcard characters.
-
-        A wildcard character is a "*".  When the entire record is a wildcard, then that
-        matches any record.  '*' as part of a longer string is not treated as a
-        wildcard.
-        """
+    def exists(self, policy: Policy, url: Url) -> bool:
+        """Returns true if any records with the policy/url."""
         return len(self._query(policy, url)) > 0
 
     def pop(
