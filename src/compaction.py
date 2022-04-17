@@ -57,12 +57,17 @@ def compact_thin(
     engine.database.batch_load(new_rows)
 
 
-# TODO: Default arguments.
+# TODO: Default engine.
 def compact(
-    policy: Policy, settings: Dict[str, Any], engine: BcEngine
+    policy: Policy,
+    settings: Optional[Dict[str, Any]] = None,
+    engine: Optional[BcEngine] = None,
 ) -> CompactionRecord:
+    if settings is None:
+        settings = {}
+
     if engine.file_system.exists(policy, "settings.yaml"):
-        y = yaml.safe_load(engine.file_system.read("settings.yaml"))
+        y = yaml.safe_load(engine.file_system.read(policy, "settings.yaml"))
         for field in ("max_bytes", "strategy"):
             # Don't overwrite, only fill-in
             if field in y and field not in settings:

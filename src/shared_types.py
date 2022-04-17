@@ -190,7 +190,7 @@ class FileSystem(object):
 
     def _key(self, policy: Policy, url: Url) -> Filename:
         """This is what maps a URL to a filename"""
-        return os.path.join(policy, str(url).replace("/", "") + ".data")
+        return str(url).replace("/", "") + ".data"
 
     def _read_fn(self, policy: Policy, fn: Filename) -> str:
         raise NotImplementedError

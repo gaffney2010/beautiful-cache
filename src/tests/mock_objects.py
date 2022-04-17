@@ -88,19 +88,22 @@ class MockFileSystem(bc.FileSystem):
             self.files = dict()
         super().__init__()
 
+    def _in_dir(self, policy: Policy, fn: Filename) -> Filename:
+        return Filename(os.path.join(policy, fn))
+
     def _read_fn(self, policy: Policy, fn: Filename) -> str:
         try:
-            result = self.files[fn]
+            result = self.files[self._in_dir(policy, fn)]
         except KeyError:
             raise BcException(f"Trying to read mock file that doesn't exist: {fn}")
 
         return result
 
     def _write_fn(self, policy: Policy, fn: Filename, content: str) -> None:
-        self.files[fn] = content
+        self.files[self._in_dir(policy, fn)] = content
 
     def _exists_fn(self, policy: Policy, fn: Filename) -> bool:
-        return fn in self.files
+        return self._in_dir(policy, fn) in self.files
 
     def size(self, policy: Policy) -> Bytes:
         # Just count characters for tests.
@@ -108,12 +111,12 @@ class MockFileSystem(bc.FileSystem):
             sum(
                 len(content)
                 for fn, content in self.files.items()
-                if fn.split("/")[0] == policy
+                if (fn.split("/")[0] == policy and fn[-5:] == ".data")
             )
         )
 
     def _delete_fn(self, policy: Policy, fn: Filename) -> None:
-        del self.files[fn]
+        del self.files[self._in_dir(policy, fn)]
 
 
 class MockClock(bc.Clock):

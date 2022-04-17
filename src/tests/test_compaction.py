@@ -8,8 +8,7 @@ from tests.mock_objects import *
 
 
 class TestCompaction(unittest.TestCase):
-    def _setup_happy_paths(self) -> policy_engine_class.BcEngine:
-        """For the first three tests, create the same HTML"""
+    def _happy_path_enging_builder(self):
         html = """
             <html>
             <head></head>
@@ -38,7 +37,12 @@ class TestCompaction(unittest.TestCase):
         beg.add_request("test_policy", "f1", "html:0/body:0/div:0/p:2", 2)
         beg.add_request("test_policy", "f2", "", 3)
 
-        return beg.build()
+        return beg
+
+    def _setup_happy_paths(self) -> policy_engine_class.BcEngine:
+        """For the first three tests, create the same HTML"""
+        # Just builds the above function.
+        return self._happy_path_enging_builder().build()
 
     def test_all_happy_path(self):
         engine = self._setup_happy_paths()
@@ -245,8 +249,42 @@ class TestCompaction(unittest.TestCase):
         )
 
     def test_use_yaml(self):
-        # TODO:
-        pass
+        """Same as thin test, but loads settings"""
+
+        settings_yaml = """
+        max_bytes: 75
+        strategy: thin
+        """
+        engine = (
+            self._happy_path_enging_builder()
+            .add_file("test_policy/settings.yaml", settings_yaml)
+            .build()
+        )
+        # Engine has size = 179 at this point.
+
+        # Slightly larger trim will remove second access record, leaving only p:1
+        compaction.compact(
+            "test_policy",
+            engine=engine,
+        )
+
+        self.assertDictEqual(
+            engine.file_system.files,
+            {
+                Filename("test_policy/f1.data"): (
+                    "<html><body><div><p>5 <span>my_span</span></p></div></body></html>"
+                ),
+                Filename("test_policy/f2.data"): "...",
+                Filename("test_policy/settings.yaml"): settings_yaml,
+            },
+        )
+        self.assertDictEqual(
+            engine.database.db,
+            {
+                make_row("test_policy", "f1", "html:0/body:0/div:0/p:0"): 2,
+                make_row("test_policy", "f2", ""): Time(3),
+            },
+        )
 
     def test_ts_ties(self):
         # 54 bytes after trimming.
