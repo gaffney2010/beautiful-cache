@@ -94,22 +94,6 @@ class Row(object):
     # We store as a string, because this is designed for database storage
     id: str = attr.ib()
 
-    def match(self, other: "Row") -> bool:
-        """Check matching with wildcards.  Can use == for non-wildcard matching"""
-        policy_match = self.policy == other.policy
-        if self.policy == "*" or other.policy == "*":
-            policy_match = True
-
-        url_match = self.url == other.url
-        if self.url == "*" or other.url == "*":
-            url_match = True
-
-        id_match = self.id == other.id
-        if self.id == "*" or other.id == "*":
-            id_match = True
-
-        return policy_match and url_match and id_match
-
 
 @attr.s()
 class CompactionRecord(object):
