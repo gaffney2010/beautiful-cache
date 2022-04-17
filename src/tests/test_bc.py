@@ -105,7 +105,6 @@ class TestEndToEnd(unittest.TestCase):
             .build()
         )
 
-        # Should be able to inject engines like this
         _ = bc.BeautifulCache(Url("test_url_1"), Policy("test_policy_1"), engine=engine)
         _ = bc.BeautifulCache(Url("test_url_2"), Policy("test_policy_2"), engine=engine)
 
@@ -124,6 +123,35 @@ class TestEndToEnd(unittest.TestCase):
             {
                 make_row("test_policy_1", "test_url_1", ""): 0,
                 make_row("test_policy_2", "test_url_2", ""): 0,
+            },
+        )
+
+    def test_multiple_policies_download_same_page(self):
+        example_html_1 = Html("<html><body>Page 1</body</html>")
+
+        engine = (
+            BcEngineGenerator().add_website(Url("test_url_1"), example_html_1).build()
+        )
+
+        # Download to both policies
+        _ = bc.BeautifulCache(Url("test_url_1"), Policy("test_policy_1"), engine=engine)
+        _ = bc.BeautifulCache(Url("test_url_1"), Policy("test_policy_2"), engine=engine)
+
+        # Saves to both directories
+        self.assertDictEqual(
+            engine.file_system.files,
+            {
+                "test_policy_1/test_url_1.data": tree_crawl.trim_html(example_html_1),
+                "test_policy_2/test_url_1.data": tree_crawl.trim_html(example_html_1),
+            },
+        )
+
+        # Makes two records
+        self.assertDictEqual(
+            engine.database.db,
+            {
+                make_row("test_policy_1", "test_url_1", ""): 0,
+                make_row("test_policy_2", "test_url_1", ""): 0,
             },
         )
 
