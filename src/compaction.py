@@ -7,9 +7,6 @@ from shared_types import *
 import tree_crawl
 
 
-#  TODO(#6): Audit conversions between Id and str
-
-
 def compact_all(
     policy: Policy, url: Url, engine: BcEngine, record: CompactionRecord
 ) -> None:
