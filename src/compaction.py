@@ -5,20 +5,22 @@ from shared_types import *
 import tree_crawl
 
 
+#  TODO(#6): Audit conversions between Id and str
+
+
 # TODO(#3): Can I just set BcEngine globally with a singleton or something?
-def compact_all(policy: Policy, url: Url, engine: BcEngine, record: CompactionRecord) -> None:
-    if len(engine.database.query(make_row(policy, url, "*"))) == 0:
+def compact_all(
+    policy: Policy, url: Url, engine: BcEngine, record: CompactionRecord
+) -> None:
+    if not engine.database.query(policy, url):
         # Safe to delete file.
         engine.file_system.delete(policy, url)
 
 
-def compact_fat(policy: Policy, url: Url, engine: BcEngine, record: CompactionRecord) -> None:
-    # TODO(#2.5): I should probably just make pop_query return a dict.  Ditto
-    #  batch_write.
-    rows = engine.database.pop_query(make_row(policy, url, "*"))
-    # TODO(#6): Replace with a function so that we're less like to make a conversion error.
-    #  TODO(#6): Find other conversions to Id or to str
-    row_by_id = {Id(k.id): v for k, v in rows}
+def compact_fat(
+    policy: Policy, url: Url, engine: BcEngine, record: CompactionRecord
+) -> None:
+    row_by_id = engine.database.pop_query(policy, url)
     ids = list(row_by_id.keys())
     ca = tree_crawl.common_ancestor(ids)
 
@@ -36,9 +38,10 @@ def compact_fat(policy: Policy, url: Url, engine: BcEngine, record: CompactionRe
     engine.database.batch_load(new_rows)
 
 
-def compact_thin(policy: Policy, url: Url, engine: BcEngine, record: CompactionRecord) -> None:
-    rows = engine.database.pop_query(make_row(policy, url, "*"))
-    row_by_id = {Id(k.id): v for k, v in rows}
+def compact_thin(
+    policy: Policy, url: Url, engine: BcEngine, record: CompactionRecord
+) -> None:
+    row_by_id = engine.database.pop_query(policy, url)
     ids = list(row_by_id.keys())
 
     # Update the cache file
@@ -56,9 +59,10 @@ def compact_thin(policy: Policy, url: Url, engine: BcEngine, record: CompactionR
     engine.database.batch_load(new_rows)
 
 
-# TODO(#2): Return some kind of message.
 # TODO: Default arguments.
-def compact(policy: Policy, settings: Dict[str, Any], engine: BcEngine) -> None:
+def compact(
+    policy: Policy, settings: Dict[str, Any], engine: BcEngine
+) -> CompactionRecord:
     # TODO(#4): Fill in settings blanks from yaml.
 
     for required_field in ("max_bytes", "strategy"):
@@ -83,11 +87,12 @@ def compact(policy: Policy, settings: Dict[str, Any], engine: BcEngine) -> None:
 
     max_bytes = settings["max_bytes"]
     while engine.file_system.size(policy) > max_bytes:
-        newly_deleted = engine.database.pop(policy, record)
-        affected_urls = {row.url for row in newly_deleted}
+        affected_urls = engine.database.pop(policy, record)
         record.affected_urls = affected_urls
         for url in affected_urls:
             file_compaction(policy, url, engine, record)
 
     size_after = engine.file_system.size(policy)
     record.size_delta = size_before - size_after
+
+    return record

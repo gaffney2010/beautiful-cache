@@ -35,7 +35,7 @@ class MockDatabase(bc.Database):
                 result[k] = v
         return result
 
-    def query(self, row: Row) -> List[Row]:
+    def query(self, policy: Policy, url: Url) -> bool:
         """Returns all the records in the database matching the passed row upto
         wildcard characters.
 
@@ -43,12 +43,14 @@ class MockDatabase(bc.Database):
         matches any record.  '*' as part of a longer string is not treated as a
         wildcard.
         """
-        return list(self._query(row).keys())
+        return len(self._query(make_row(policy, url, "*"))) > 0
 
-    def pop(self, policy: Policy, record: Optional[CompactionRecord] = None) -> Row:
-        """Remove the records with the smallest timestamp and return.
-        
-        Additional recording if record is passed in.
+    def pop(
+        self, policy: Policy, record: Optional[CompactionRecord] = None
+    ) -> Set[Url]:
+        """Remove the records with the smallest timestamp and return the URLs.
+
+        Additional recording to record if it's passed in.
         """
         if len(self.db) == 0:
             raise BcException("Trying to pop from an empty DB")
@@ -62,23 +64,23 @@ class MockDatabase(bc.Database):
         # Removing motion
         for r in result:
             del self.db[r]
-        
+
         # Record, if record passed in.
         if record is not None:
             record.delete_through = min_time
             record.records_deleted += result
 
-        return result
+        return {row.url for row in result}
 
-    def pop_query(self, row: Row) -> List[Tuple[Row, Time]]:
+    def pop_query(self, policy: Policy, url: Url) -> Dict[Id, Time]:
         """Does the same as query, but removes the rows from the database.
 
         Also returns the timestamps with it.
         """
-        result = self._query(row)
+        result = self._query(make_row(policy, url, "*"))
         for k in result.keys():
             del self.db[k]
-        return [(k, v) for k, v in result.items()]
+        return {Id(k.id): v for k, v in result.items()}
 
     def batch_load(self, rows: List[Tuple[Row, Time]]) -> None:
         """Put all these rows in the table with a timestamp"""

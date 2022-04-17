@@ -1,5 +1,5 @@
 import os
-from typing import Any, List, NewType, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, NewType, Optional, Set, Tuple, Union
 
 import attr
 
@@ -140,16 +140,26 @@ class UrlReader(object):
 
 
 class Database(object):
+    """The functions here are opinionated to the applications."""
+
     def __init__(self):
         pass
 
-    # TODO(#2): Should I return a success message or something?
-    # TODO(#3): Should these signatures should take policy separately for safety?
-    #  TODO(#3): Actually Row maybe shouldn't contain policy...  :/
+    # TODO: Should I return a success message or something?
     def _append(self, row: Row, ts: Time) -> None:
         raise NotImplementedError
 
-    def query(self, row: Row) -> List[Row]:
+    # TODO(#3): Rename methods
+    def pop(
+        self, policy: Policy, record: Optional[CompactionRecord] = None
+    ) -> Set[Url]:
+        """Remove the records with the smallest timestamp and return.
+
+        Additional recording to record if it's passed in.
+        """
+        raise NotImplementedError
+
+    def query(self, policy: Policy, url: Url) -> bool:
         """Returns all the records in the database matching the passed row upto
         wildcard characters.
 
@@ -159,20 +169,14 @@ class Database(object):
         """
         raise NotImplementedError
 
-    def pop(self, policy: Policy, record: Optional[CompactionRecord] = None) -> Row:
-        """Remove the records with the smallest timestamp and return.
-        
-        Additional recording if record is passed in.
-        """
-        raise NotImplementedError
-
-    def pop_query(self, row: Row) -> List[Tuple[Row, Time]]:
+    def pop_query(self, policy: Policy, url: Url) -> Dict[Id, Time]:
         """Does the same as query, but removes the rows from the database.
 
         Also returns the timestamps with it.
         """
         raise NotImplementedError
 
+    # TODO(#3): Maybe row should contain time.
     def batch_load(self, rows: List[Tuple[Row, Time]]) -> None:
         """Put all these rows in the table with a timestamp"""
         raise NotImplementedError
