@@ -24,15 +24,16 @@ class CacheTag(object):
 
         self._id: Optional[Id] = None
 
-    # TODO(#5): Make a CacheTagList object that we allow to materialize all at once.
-    def find_all(self, *args, **kwargs) -> List["CacheTag"]:
+    def find_all(self, *args, **kwargs) -> "CacheTagList":
         if self.tag is None:
             raise BcException("No tag to search")
 
-        return [
-            CacheTag(t, self.policy, self.url, self.engine)
-            for t in self.tag.find_all(*args, **kwargs)
-        ]
+        return CacheTagList(
+            tag_list=[
+                CacheTag(t, self.policy, self.url, self.engine)
+                for t in self.tag.find_all(*args, **kwargs)
+            ]
+        )
 
     def find(self, *args, **kwargs) -> "CacheTag":
         if self.tag is None:
@@ -92,6 +93,17 @@ class CacheTag(object):
             return "tagless-node"
 
         return str(self.tag)
+
+
+class CacheTagList(object):
+    def __init__(self, tag_list: List[CacheTag]):
+        self.tag_list = tag_list
+
+    def __getitem__(self, ind: int) -> CacheTag:
+        return self.tag_list[ind]
+
+    def materialize(self) -> List[Ingredient]:
+        return [t.materialize() for t in self.tag_list]
 
 
 class BeautifulCache(CacheTag):
