@@ -289,14 +289,46 @@ class TestCompaction(unittest.TestCase):
             },
         )
 
+    def test_erase_entire_old_before_any_new(self):
+        # 54 bytes after trimming.
+        html = """
+            <html>
+            <body>
+            <a>A</a><b>B</b><c>C</c>
+            </body>
+            </html>"""
+
+        beg = BcEngineGenerator()
+
+        beg.add_file("test_policy/f1.data", tree_crawl.trim_html(html))
+        # Add big file.
+        beg.add_file("test_policy/f0.data", "".join(["." for _ in range(1000)]))
+
+        beg.add_request("test_policy", "f0", "", 0)
+        beg.add_request("test_policy", "f1", "", 10)
+        beg.add_request("test_policy", "f1", "html:0/body:0/a:0", 11)
+
+        engine = beg.build()
+
+        # Trim the entire first file, even though it's overkill, because it's older.
+        compaction.compact(
+            "test_policy",
+            settings={"max_bytes": 1053, "strategy": "thin"},
+            engine=engine,
+        )
+
+        self.assertDictEqual(
+            engine.database.db,
+            {
+                make_row("test_policy", "f1", ""): 10,
+                make_row("test_policy", "f1", "html:0/body:0/a:0"): 11,
+            },
+        )
+
     def test_transaction(self):
         # TODO:
         pass
 
     def test_multiple_policies(self):
-        # TODO:
-        pass
-
-    def test_erase_entire_old_before_any_new(self):
         # TODO:
         pass
