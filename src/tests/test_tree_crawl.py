@@ -32,7 +32,7 @@ class TestTreeCrawl(unittest.TestCase):
 
         self.assertEqual(tree_crawl.trim(soup), expected_html)
 
-    def test_several_spaces(self):
+    def test_trim_several_spaces(self):
         html = "<html><body><p>    Hi    </p></body></html>"
 
         soup = bs4.BeautifulSoup(html, features="lxml")
@@ -41,7 +41,7 @@ class TestTreeCrawl(unittest.TestCase):
 
         self.assertEqual(tree_crawl.trim(soup), expected_html)
 
-    def test_newlines(self):
+    def test_trim_newlines(self):
         html = """<html><body><p>
         
         
@@ -56,7 +56,7 @@ class TestTreeCrawl(unittest.TestCase):
 
         self.assertEqual(tree_crawl.trim(soup), expected_html)
 
-    def test_spaces_outside(self):
+    def test_trim_spaces_outside(self):
         html = "<html><body>     <p>Hi</p> </body></html>"
 
         soup = bs4.BeautifulSoup(html, features="lxml")
@@ -65,7 +65,7 @@ class TestTreeCrawl(unittest.TestCase):
 
         self.assertEqual(tree_crawl.trim(soup), expected_html)
 
-    def test_asymmetric(self):
+    def test_trim_asymmetric(self):
         html = "<html><body><p>Hi  </p>  </body>  </html>"
 
         soup = bs4.BeautifulSoup(html, features="lxml")
