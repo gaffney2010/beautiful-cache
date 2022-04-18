@@ -201,3 +201,33 @@ class TestTreeCrawl(unittest.TestCase):
             tree_crawl.isolate_id(html, Id("html:0/body:0/div:1/p:0/a:0")),
             "<html><body><div><p><a>6</a></p></div></body></html>",
         )
+
+    def test_combine_ids_happy_path(self):
+        html = """
+            <html>
+            <head></head>
+            <body>
+                <div>
+                    <p><a>1</a><a>2</a></p>
+                    <p><a>3</a><a>4</a></p>
+                    <p>5 <span>my_span</span></p>
+                </div>
+                <div>
+                    <p><a>6</a> 7 and beyond</p>
+                </div>
+            </body>
+            </html>"""
+
+        id_mapper = dict()
+        result = tree_crawl(html, [Id("html:0/body:0/div:0/p:1/a:0"), Id("html:0/body:0/div:1")], id_mapper)
+
+        self.assertEqual(result, "")
+
+    def test_combine_ids_multiple_ids(self):
+        pass
+
+    def test_combine_ids_no_common_ancestor(self):
+        pass
+
+    def test_combine_ids_child(self):
+        pass
