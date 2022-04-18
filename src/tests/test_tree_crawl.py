@@ -168,3 +168,36 @@ class TestTreeCrawl(unittest.TestCase):
     def test_mask_id_invalid_mask(self):
         with self.assertRaises(BcException) as context:
             tree_crawl.mask_id(Id("a:1/b:2/c:3/d:7/e:8"), Id("a:1/c:5/e:7"))
+
+    def test_isolate_id_happy_path(self):
+        html = """
+            <html>
+            <head></head>
+            <body>
+                <div>
+                    <p><a>1</a><a>2</a></p>
+                    <p><a>3</a><a>4</a></p>
+                    <p>5 <span>my_span</span></p>
+                </div>
+                <div>
+                    <p><a>6</a> 7 and beyond</p>
+                </div>
+            </body>
+            </html>"""
+
+        self.assertEqual(
+            tree_crawl.isolate_id(html, Id("html:0/body:0/div:0/p:1")),
+            "<html><body><div><p><a>3</a><a>4</a></p></div></body></html>",
+        )
+        self.assertEqual(
+            tree_crawl.isolate_id(html, Id("html:0/body:0/div:1")),
+            "<html><body><div> <p><a>6</a> 7 and beyond</p> </div></body></html>",
+        )
+        self.assertEqual(
+            tree_crawl.isolate_id(html, Id("html:0/body:0/div:1/p:0")),
+            "<html><body><div><p><a>6</a> 7 and beyond</p></div></body></html>",
+        )
+        self.assertEqual(
+            tree_crawl.isolate_id(html, Id("html:0/body:0/div:1/p:0/a:0")),
+            "<html><body><div><p><a>6</a></p></div></body></html>",
+        )
