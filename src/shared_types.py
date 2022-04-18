@@ -43,6 +43,9 @@ class Id(object):
     def __str__(self) -> str:
         return self._id
 
+    def __repr__(self) -> str:
+        return self.__str__()
+
     def __getitem__(self, ind: int) -> str:
         return self._parts[ind]
 

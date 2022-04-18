@@ -219,15 +219,92 @@ class TestTreeCrawl(unittest.TestCase):
             </html>"""
 
         id_mapper = dict()
-        result = tree_crawl(html, [Id("html:0/body:0/div:0/p:1/a:0"), Id("html:0/body:0/div:1")], id_mapper)
+        result = tree_crawl.combine_ids(
+            html,
+            [Id("html:0/body:0/div:0/p:1/a:0"), Id("html:0/body:0/div:1")],
+            id_mapper,
+        )
 
-        self.assertEqual(result, "")
+        self.assertEqual(
+            result,
+            (
+                "<html><body><div><p><a>3</a></p></div><div> <p><a>6</a> 7 and beyond</p>"
+                " </div></body></html>"
+            ),
+        )
+
+        # id_mapper also contains other, unneeded mappings.
+        self.assertEqual(
+            id_mapper[Id("html:0/body:0/div:0/p:1/a:0")],
+            Id("html:0/body:0/div:0/p:0/a:0"),
+        )
+        self.assertEqual(
+            id_mapper[Id("html:0/body:0/div:1")], Id("html:0/body:0/div:1")
+        )
 
     def test_combine_ids_multiple_ids(self):
-        pass
+        html = """
+            <html>
+            <head></head>
+            <body>
+                <div>
+                    <p><a>1</a><a>2</a></p>
+                    <p><a>3</a><a>4</a></p>
+                    <p>5 <span>my_span</span></p>
+                </div>
+                <div>
+                    <p><a>6</a> 7 and beyond</p>
+                </div>
+            </body>
+            </html>"""
 
-    def test_combine_ids_no_common_ancestor(self):
-        pass
+        id_mapper = dict()
+        result = tree_crawl.combine_ids(
+            html,
+            [
+                Id("html:0/body:0/div:0/p:0/a:0"),
+                Id("html:0/body:0/div:0/p:1/a:0"),
+                Id("html:0/body:0/div:0/p:1/a:1"),
+                Id("html:0/body:0/div:1"),
+            ],
+            id_mapper,
+        )
+
+        self.assertEqual(
+            result,
+            (
+                "<html><body><div><p><a>1</a></p><p><a>3</a><a>4</a></p></div><div> <p>"
+                "<a>6</a> 7 and beyond</p> </div></body></html>"
+            ),
+        )
 
     def test_combine_ids_child(self):
-        pass
+        html = """
+            <html>
+            <head></head>
+            <body>
+                <div>
+                    <p><a>1</a><a>2</a></p>
+                    <p><a>3</a><a>4</a></p>
+                    <p>5 <span>my_span</span></p>
+                </div>
+                <div>
+                    <p><a>6</a> 7 and beyond</p>
+                </div>
+            </body>
+            </html>"""
+
+        id_mapper = dict()
+        result = tree_crawl.combine_ids(
+            html,
+            [
+                Id("html:0/body:0/div:0/p:1"),
+                Id("html:0/body:0/div:0/p:1/a:0"),
+            ],
+            id_mapper,
+        )
+
+        self.assertEqual(
+            result,
+            "<html><body><div><p><a>3</a><a>4</a></p></div></body></html>",
+        )
