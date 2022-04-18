@@ -149,3 +149,22 @@ class TestTreeCrawl(unittest.TestCase):
             ),
             Id("a:0/b:1"),
         )
+
+    def test_mask_id_happy_path(self):
+        self.assertEqual(
+            tree_crawl.mask_id(Id("a:1/b:2/c:3/d:7/e:8"), Id("a:1/b:2/c:3")),
+            Id("a:0/b:0/c:0/d:7/e:8"),
+        )
+
+    def test_mask_id_empty_mask(self):
+        self.assertEqual(
+            tree_crawl.mask_id(Id("a:1/b:2/c:3/d:7/e:8"), Id("")),
+            Id("a:1/b:2/c:3/d:7/e:8"),
+        )
+
+    def test_mask_id_empty_id(self):
+        self.assertEqual(tree_crawl.mask_id(Id(""), Id("")), Id(""))
+
+    def test_mask_id_invalid_mask(self):
+        with self.assertRaises(BcException) as context:
+            tree_crawl.mask_id(Id("a:1/b:2/c:3/d:7/e:8"), Id("a:1/c:5/e:7"))

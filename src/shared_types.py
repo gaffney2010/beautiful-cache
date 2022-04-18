@@ -36,6 +36,9 @@ class Id(object):
 
         self._id = id
         self._parts = id.split("/")
+        if self._id == "":
+            # Special case
+            self._parts = list()
 
     def __str__(self) -> str:
         return self._id
@@ -55,6 +58,9 @@ class Id(object):
         if isinstance(other, Id):
             return self._id == other._id
         raise Exception(f"Unexpected type for id: {type(other)}")
+
+    def __ne__(self, other) -> bool:
+        return not self.__eq__(other)
 
     def __hash__(self):
         return hash(self._id)

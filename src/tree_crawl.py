@@ -88,9 +88,11 @@ def mask_id(id: Id, mask: Id) -> Id:
     mask_id("a:1/b:2/c:3/d:7/e:8", "a:1/b:2/c:3") returns "a:0/b:0/c:0/d:7/e:8"
     """
     result = list()
+    i = -1  # This value will stay if mask is empty.
     # TODO: mypy doesn't like this.
     for i, xi in enumerate(mask):
-        assert xi == id[i]
+        if xi != id[i]:
+            raise BcException("Mask error")
         tag, _ = shared_logic.split_id_part(xi)
         result.append(f"{tag}:0")
     # TODO: Add test where id==mask
