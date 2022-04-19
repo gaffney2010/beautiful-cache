@@ -1,5 +1,6 @@
 # type: ignore
 import os
+import time
 
 import attr
 
@@ -101,15 +102,16 @@ class ConcreteDatabase(Database):
 
 
 class ConcreteFileSystem(FileSystem):
-    def __init__(self):
-        pass
-
     def size(self, policy: Policy) -> Bytes:
         """Returns total size of all data files in policy."""
         size = 0
-        # TODO
+        data_folder = os.path.join(policy, "data")
+        for fn in os.listdir(data_folder):
+            full_fn = os.path.join(data_folder, fn)
+            if not os.path.isfile(full_fn):
+                raise BcException(f"data folder contains unexpected folder: {full_fn}")
+            size += os.path.getsize(full_fn)
         return Bytes(size)
-        # for _, _, files in os.walk(os.path.join(policy, "data"))
 
     def _read_fn(self, policy: Policy, fn: Filename) -> str:
         with open(os.path.join(policy, fn), "r") as f:
@@ -127,7 +129,9 @@ class ConcreteFileSystem(FileSystem):
 
 
 class ConcreteClock(Clock):
-    pass
+    def now(self) -> Time:
+        # Round to the nearest ms
+        return Time(int(time.monotonic * 1000))
 
 
 ConcreteBcEngine = BcEngine(
