@@ -9,6 +9,7 @@ from overload import overload
 import retrying
 from selenium import webdriver
 
+from constants import *
 from shared_types import *
 import tree_crawl
 
