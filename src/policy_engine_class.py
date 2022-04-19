@@ -1,9 +1,12 @@
 # type: ignore
+import os
 
 import attr
 
 # Omit this from mypy analysis because of the overload.
 from overload import overload
+import retrying
+from selenium import webdriver
 
 from shared_types import *
 import tree_crawl
@@ -39,3 +42,97 @@ class BcEngine(object):
         self.file_system.write(policy, url, html)  # Save
 
         return html
+
+
+class WebDriver(object):
+    """Used for convenient open and closing.
+    This will handle closing for you, but will close as soon as the driver
+    leaves scope.
+    """
+
+    def __init__(self):
+        self._driver = None
+
+    def __enter__(self):
+        """We just need this, so that we can have the exit semantic."""
+        return self
+
+    def driver(self):
+        """Get the main object, loading if necessary."""
+        # Lazy load
+        if self._driver is None:
+            logging.debug("Initializing driver.")
+            options = webdriver.FirefoxOptions()
+            options.add_argument("--headless")
+            self._driver = webdriver.Firefox(
+                options=options,
+                service_log_path="{}/geckodriver.log".format(LOGGING_DIR),
+            )
+            logging.debug("Finished initializing driver.")
+        return self._driver
+
+    def __exit__(self, type, value, tb):
+        """Clean-up on exit."""
+        if self._driver:
+            self._driver.quit()
+        self._driver = None
+
+
+class ConcreteUrlReader(UrlReader):
+    def __init__(self):
+        self.driver = WebDriver()
+        super().__init__()
+
+    @retrying.retry(wait_random_min=200, wait_random_max=400, stop_max_attempt_number=3)
+    def _read_url_to_string_helper(help_url: Url, web_driver):
+        web_driver.driver().get(str(help_url))
+        time.sleep(DRIVER_DELAY_SEC)
+        return web_driver.driver().page_source
+
+    def _read(self, url: Url) -> Html:
+        with WebDriver() as driver:
+            page_text = _read_url_to_string_helper(url, self.driver)
+
+        return Html(page_text)
+
+
+class ConcreteDatabase(Database):
+    pass
+
+
+class ConcreteFileSystem(FileSystem):
+    def __init__(self):
+        pass
+
+    def size(self, policy: Policy) -> Bytes:
+        """Returns total size of all data files in policy."""
+        size = 0
+        # TODO
+        return Bytes(size)
+        # for _, _, files in os.walk(os.path.join(policy, "data"))
+
+    def _read_fn(self, policy: Policy, fn: Filename) -> str:
+        with open(os.path.join(policy, fn), "r") as f:
+            return f.read()
+
+    def _write_fn(self, policy: Policy, fn: Filename, content: str) -> None:
+        with open(os.path.join(policy, fn), "w") as f:
+            f.write(content)
+
+    def _exists_fn(self, policy: Policy, fn: Filename) -> bool:
+        return os.path.exists(os.path.join(policy, fn))
+
+    def _delete_fn(self, policy: Policy, fn: Filename) -> None:
+        os.remove(os.path.join(policy, fn))
+
+
+class ConcreteClock(Clock):
+    pass
+
+
+ConcreteBcEngine = BcEngine(
+    url_reader=ConcreteUrlReader(),
+    database=ConcreteDatabase(),
+    file_system=ConcreteFileSystem(),
+    clock=ConcreteClock(),
+)
