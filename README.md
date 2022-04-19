@@ -11,7 +11,6 @@ Within a directory, the file system would include data, a Requests database, and
 ```
 policy_name/
 |-- data/
-|-- Requests.db
 |-- settings.yaml (optional)
 ```
 
@@ -29,7 +28,7 @@ The Request database stores the url and the request string "body:0/div:0/p:0/a:1
 
 Everytime a URL is freshly downloaded, we record a root request in the database `html`.
 
-The database is a MySQL file called `Requests` saved in the policy directory.  MySQL is not optimal for frequent upsert, but it's the easiest to implement, so it suffices for V1.
+The database is a MySQL table.  MySQL is not optimal for frequent upsert, but it's the easiest to implement, so it suffices for V1.
 
 ## Policy settings
 These describe how the compaction should work.  This can be passed in compaction time.  If not passed in, then the values will be read from `settings.yaml` in the policy directory.

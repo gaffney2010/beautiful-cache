@@ -4,6 +4,8 @@ import time
 
 import attr
 
+import mysql.connector
+
 # Omit this from mypy analysis because of the overload.
 from overload import overload
 import retrying
@@ -99,7 +101,120 @@ class ConcreteUrlReader(UrlReader):
 
 
 class ConcreteDatabase(Database):
-    pass
+    """Must create database (`bc`) manually before using."""
+
+    def __init__(self):
+        self.db = mysql.connector.connect(
+            host="localhost",
+            user=MYSQL_USER,
+            password=MYSQL_PASSWORD,
+            database=MYSQL_DB,
+        )
+        super().__init__()
+
+    def _make_table(self, policy: Policy) -> None:
+        # If the table exists, do nothing.
+        mycursor = self.db.cursor()
+        mycursor.execute("SHOW TABLES;")
+        for x in mycursor:
+            if x == policy:
+                return
+
+        mycursor.execute(
+            f"""
+        CREATE TABLE {policy} (
+            url TEXT NOT NULL,
+            id TEXT NOT NULL,
+            ts BIGINT NOT NULL,
+            PRIMARY KEY(url, id)
+        )
+        """
+        )
+
+    # TODO: Should I return a success message or something?
+    def _append(self, row: Row, ts: Time) -> None:
+        self._make_table(row.policy)
+
+        mycursor = self.db.cursor()
+        mycursor.execute(
+            f"""
+        REPLACE INTO {policy} (url, id, ts)
+        VALUES ({str(row.url)}, {str(row.id)}, {ts})
+        """
+        )
+        self.db.commit()
+
+    def pop(
+        self, policy: Policy, record: Optional[CompactionRecord] = None
+    ) -> Set[Url]:
+        """Remove the records with the smallest timestamp and return.
+
+        Additional recording to record if it's passed in.
+        """
+        self._make_table(policy)
+
+        mycursor = self.db.cursor()
+        mycursor.execute(
+            f"""
+        SELECT MIN(ts) my_min FROM {policy}
+        """
+        )
+        my_min = mycursor.fetchone()[0]
+
+        mycursor.execute(
+            f"""
+        SELECT DISTINCT url FROM {policy} WHERE ts={my_min}
+        """
+        )
+        result = {Url(row[0]) for row in mycursor.fetchall()}
+
+        mycursor.execute(
+            f"""
+        DELETE FROM {policy} WHERE ts={my_min}
+        """
+        )
+        self.db.commit()
+
+        return result
+
+    def exists(self, policy: Policy, url: Url) -> bool:
+        """Returns true if any records with the policy/url."""
+        self._make_table(policy)
+
+        mycursor = self.db.cursor()
+        mycursor.execute(
+            f"""
+        SELECT * FROM {policy} WHERE url='{str(url)}';
+        """
+        )
+        return mycursor.fetchone() is not None
+
+    def pop_query(self, policy: Policy, url: Url) -> Dict[Id, Time]:
+        """Deletes all records with the given policy/url.  Returns the IDs/timestamps
+        for the deleted rows.
+        """
+        self._make_table(policy)
+
+        mycursor.execute(
+            f"""
+        SELECT DISTINCT id, ts FROM {policy} WHERE url={str(url)}
+        """
+        )
+        result = {Id(row[0]): Time(row[1]) for row in mycursor.fetchall()}
+
+        mycursor.execute(
+            f"""
+        DELETE FROM {policy} WHERE url={str(url)}
+        """
+        )
+        self.db.commit()
+
+        return result
+
+    def batch_load(self, rows: List[Tuple[Row, Time]]) -> None:
+        """Put all these rows in the table with a timestamp"""
+        for row, time in rows:
+            self._append(row, time)
 
 
 class ConcreteFileSystem(FileSystem):
