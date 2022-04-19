@@ -27,9 +27,9 @@ class TestCompaction(unittest.TestCase):
         beg = BcEngineGenerator()
 
         # TODO: Consistent typing in tests...
-        beg.add_file("test_policy/f1.data", tree_crawl.trim_html(html))
+        beg.add_file("test_policy/data/f1.data", tree_crawl.trim_html(html))
         beg.add_file(
-            "test_policy/f2.data", "..."
+            "test_policy/data/f2.data", "..."
         )  # Something to check existence if everything else deleted.
 
         beg.add_request("test_policy", "f1", "", 0)
@@ -61,7 +61,7 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.file_system.files,
             {
-                Filename("test_policy/f2.data"): "...",
+                Filename("test_policy/data/f2.data"): "...",
             },
         )
         self.assertDictEqual(
@@ -85,11 +85,11 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.file_system.files,
             {
-                Filename("test_policy/f1.data"): (
+                Filename("test_policy/data/f1.data"): (
                     "<html><body><div> <p><a>1</a><a>2</a></p> <p><a>3</a><a>4</a></p>"
                     " <p>5 <span>my_span</span></p> </div></body></html>"
                 ),
-                Filename("test_policy/f2.data"): "...",
+                Filename("test_policy/data/f2.data"): "...",
             },
         )
         self.assertDictEqual(
@@ -111,11 +111,11 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.file_system.files,
             {
-                Filename("test_policy/f1.data"): (
+                Filename("test_policy/data/f1.data"): (
                     "<html><body><div><p>5 <span>my_span</span></p></div></body>"
                     "</html>"
                 ),
-                Filename("test_policy/f2.data"): "...",
+                Filename("test_policy/data/f2.data"): "...",
             },
         )
         self.assertDictEqual(
@@ -140,11 +140,11 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.file_system.files,
             {
-                Filename("test_policy/f1.data"): (
+                Filename("test_policy/data/f1.data"): (
                     "<html><body><div><p><a>2</a></p><p>5 <span>my_span</span></p>"
                     "</div></body></html>"
                 ),
-                Filename("test_policy/f2.data"): "...",
+                Filename("test_policy/data/f2.data"): "...",
             },
         )
         # Notice that all the tags got remapped for the new doc.
@@ -168,10 +168,10 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.file_system.files,
             {
-                Filename("test_policy/f1.data"): (
+                Filename("test_policy/data/f1.data"): (
                     "<html><body><div><p>5 <span>my_span</span></p></div></body></html>"
                 ),
-                Filename("test_policy/f2.data"): "...",
+                Filename("test_policy/data/f2.data"): "...",
             },
         )
         self.assertDictEqual(
@@ -198,11 +198,11 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.file_system.files,
             {
-                Filename("test_policy/f1.data"): (
+                Filename("test_policy/data/f1.data"): (
                     "<html><body><div><p>5 <span>my_span</span></p></div></body>"
                     "</html>"
                 ),
-                Filename("test_policy/f2.data"): "...",
+                Filename("test_policy/data/f2.data"): "...",
             },
         )
         self.assertDictEqual(
@@ -228,13 +228,13 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.file_system.files,
             {
-                Filename("test_policy/f1.data"): (
+                Filename("test_policy/data/f1.data"): (
                     "<html> <head></head> <body> <div> "
                     "<p><a>1</a><a>2</a></p> <p><a>3</a><a>4</a></p> <p>5 "
                     "<span>my_span</span></p> </div> <div> <p><a>6</a> 7 "
                     "and beyond</p> </div> </body> </html>"
                 ),
-                Filename("test_policy/f2.data"): "...",
+                Filename("test_policy/data/f2.data"): "...",
             },
         )
         # Notice that all the tags got remapped for the new doc.
@@ -271,10 +271,10 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.file_system.files,
             {
-                Filename("test_policy/f1.data"): (
+                Filename("test_policy/data/f1.data"): (
                     "<html><body><div><p>5 <span>my_span</span></p></div></body></html>"
                 ),
-                Filename("test_policy/f2.data"): "...",
+                Filename("test_policy/data/f2.data"): "...",
                 Filename("test_policy/settings.yaml"): settings_yaml,
             },
         )
@@ -297,7 +297,7 @@ class TestCompaction(unittest.TestCase):
 
         beg = BcEngineGenerator()
 
-        beg.add_file("test_policy/f1.data", tree_crawl.trim_html(html))
+        beg.add_file("test_policy/data/f1.data", tree_crawl.trim_html(html))
 
         beg.add_request("test_policy", "f1", "", 0)
         beg.add_request("test_policy", "f1", "html:0/body:0/a:0", 0)
@@ -316,7 +316,9 @@ class TestCompaction(unittest.TestCase):
         self.assertDictEqual(
             engine.file_system.files,
             {
-                Filename("test_policy/f1.data"): ("<html><body><c>C</c></body></html>"),
+                Filename("test_policy/data/f1.data"): (
+                    "<html><body><c>C</c></body></html>"
+                ),
             },
         )
         # Notice that all the tags got remapped for the new doc.
@@ -338,9 +340,9 @@ class TestCompaction(unittest.TestCase):
 
         beg = BcEngineGenerator()
 
-        beg.add_file("test_policy/f1.data", tree_crawl.trim_html(html))
+        beg.add_file("test_policy/data/f1.data", tree_crawl.trim_html(html))
         # Add big file.
-        beg.add_file("test_policy/f0.data", "".join(["." for _ in range(1000)]))
+        beg.add_file("test_policy/data/f0.data", "".join(["." for _ in range(1000)]))
 
         beg.add_request("test_policy", "f0", "", 0)
         beg.add_request("test_policy", "f1", "", 10)
@@ -386,8 +388,8 @@ class TestCompaction(unittest.TestCase):
         beg = BcEngineGenerator()
 
         # TODO: Consistent typing in tests...
-        beg.add_file("test_policy_1/f1.data", tree_crawl.trim_html(html))
-        beg.add_file("test_policy_2/f1.data", tree_crawl.trim_html(html))
+        beg.add_file("test_policy_1/data/f1.data", tree_crawl.trim_html(html))
+        beg.add_file("test_policy_2/data/f1.data", tree_crawl.trim_html(html))
 
         beg.add_request("test_policy_1", "f1", "", 0)
         beg.add_request("test_policy_1", "f1", "html:0/body:0/div:0/p:0/a:1", 1)

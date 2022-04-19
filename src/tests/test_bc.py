@@ -51,7 +51,7 @@ class TestEndToEnd(unittest.TestCase):
         # Check that a cached version of the html (after trimming) has been saved.
         self.assertDictEqual(
             engine.file_system.files,
-            {"test_policy/test_url.data": tree_crawl.trim_html(example_html)},
+            {"test_policy/data/test_url.data": tree_crawl.trim_html(example_html)},
         )
 
         # Check that three Request records have been added to the db.  One for the
@@ -80,7 +80,7 @@ class TestEndToEnd(unittest.TestCase):
 
         engine = (
             BcEngineGenerator()
-            .add_file("test_policy/test_url.data", old_html)
+            .add_file("test_policy/data/test_url.data", old_html)
             .add_website("test_url", new_html)
             .build()
         )
@@ -112,8 +112,12 @@ class TestEndToEnd(unittest.TestCase):
         self.assertDictEqual(
             engine.file_system.files,
             {
-                "test_policy_1/test_url_1.data": tree_crawl.trim_html(example_html_1),
-                "test_policy_2/test_url_2.data": tree_crawl.trim_html(example_html_2),
+                "test_policy_1/data/test_url_1.data": tree_crawl.trim_html(
+                    example_html_1
+                ),
+                "test_policy_2/data/test_url_2.data": tree_crawl.trim_html(
+                    example_html_2
+                ),
             },
         )
 
@@ -141,8 +145,12 @@ class TestEndToEnd(unittest.TestCase):
         self.assertDictEqual(
             engine.file_system.files,
             {
-                "test_policy_1/test_url_1.data": tree_crawl.trim_html(example_html_1),
-                "test_policy_2/test_url_1.data": tree_crawl.trim_html(example_html_1),
+                "test_policy_1/data/test_url_1.data": tree_crawl.trim_html(
+                    example_html_1
+                ),
+                "test_policy_2/data/test_url_1.data": tree_crawl.trim_html(
+                    example_html_1
+                ),
             },
         )
 
