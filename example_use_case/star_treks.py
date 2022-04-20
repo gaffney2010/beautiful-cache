@@ -11,6 +11,7 @@ import pandas as pd
 from tabulate import tabulate
 
 import bc
+from compaction import compact
 from constants import *
 from policy_engine_class import ConcreteBcEngine
 from shared_types import *
@@ -70,6 +71,11 @@ for _ in range(2):
         for p in soup.find_all("p"):
             if str(p.tag).find("Kirk") != -1:
                 p.materialize()
+
+summary()
+
+print("Compacting...")
+compact(policy, {"max_bytes": 4_800_000, "strategy": "fat"})
 
 summary()
 

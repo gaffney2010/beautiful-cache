@@ -157,6 +157,7 @@ class ConcreteDatabase(Database):
         """,
         )
 
+    # TODO: Handle empty DB better...
     def pop(
         self, policy: Union[Policy, str], record: Optional[CompactionRecord] = None
     ) -> Set[Url]:

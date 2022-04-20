@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional
 
 import yaml  # type: ignore
 
-from policy_engine_class import BcEngine  # type: ignore
+from policy_engine_class import BcEngine, ConcreteBcEngine  # type: ignore
 from shared_types import *
 import tree_crawl
 
@@ -65,6 +65,8 @@ def compact(
 ) -> CompactionRecord:
     if settings is None:
         settings = {}
+    if engine is None:
+        engine = ConcreteBcEngine
 
     if engine.file_system.exists(policy, "settings.yaml"):
         y = yaml.safe_load(engine.file_system.read(policy, "settings.yaml"))
@@ -98,7 +100,10 @@ def compact(
         affected_urls = engine.database.pop(policy, record)
         record.affected_urls = affected_urls
         for url in affected_urls:
-            file_compaction(policy, url, engine, record)
+            try:
+                file_compaction(policy, url, engine, record)
+            except BcException as err:
+                raise BcException(f"Error compacting {url}: {err}")
 
     size_after = engine.file_system.size(policy)
     record.size_delta = size_before - size_after
