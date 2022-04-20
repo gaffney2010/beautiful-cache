@@ -20,16 +20,12 @@ def validate_id(id: Id, html: Html) -> bool:
     """Checks if the id correctly identifies an element in the html."""
     ingredient = bs4.BeautifulSoup(html, features="lxml")
 
-    print("=================")
     for part in id:
         tag, i = split_id_part(part)
-        print(str(ingredient))
-        print(tag)
-        print(i)
 
-        # try:
-        ingredient = ingredient.find_all(tag)[i]
-        # except:
-        #     return False
+        try:
+            ingredient = ingredient.findChildren(tag, recursive=False)[i]
+        except:
+            return False
 
     return True

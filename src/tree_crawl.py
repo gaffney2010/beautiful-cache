@@ -115,7 +115,7 @@ def isolate_id(html: Html, id: Id) -> Html:
 
         # Find the right ingredient
         tag, i = shared_logic.split_id_part(id[ind])
-        child_ingredient = working_ingredient.find_all(tag)[i]
+        child_ingredient = working_ingredient.findChildren(tag, recursive=False)[i]
 
         desc = _isolate(child_ingredient, id, ind + 1)
         return _st_tag(working_ingredient) + desc + _en_tag(working_ingredient)
