@@ -64,7 +64,6 @@ def summary():
     df = pd.DataFrame(df_rows)
     print(tabulate(df))
 
-
 summary()
 
 for _ in range(2):
