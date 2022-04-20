@@ -1,6 +1,7 @@
 attrs
 beautifulsoup4
 lxml
+mysql-connector-python
 overload
 pyyaml
 retrying
