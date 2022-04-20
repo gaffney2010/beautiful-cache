@@ -40,6 +40,8 @@ class Id(object):
             # Special case
             self._parts = list()
 
+        self.valid_htmls = set()
+
     def __str__(self) -> str:
         return self._id
 

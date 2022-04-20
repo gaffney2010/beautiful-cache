@@ -14,11 +14,13 @@ def split_id_part(id_part: str) -> Tuple[str, int]:
     return tag, int(i)
 
 
-# Note: This could be sped up by making ID an object that stores hashes for htmls it's
-#  been found to work for.  For now this is a premature optimization.
 # TODO: Add test for <div> child of <div>
 def validate_id(id: Id, html: Html) -> bool:
     """Checks if the id correctly identifies an element in the html."""
+    h = hash(html)
+    if h in id.valid_htmls:
+        return True
+
     ingredient = bs4.BeautifulSoup(html, features="lxml")
 
     for part in id:
@@ -29,4 +31,5 @@ def validate_id(id: Id, html: Html) -> bool:
         except:
             return False
 
+    id.valid_htmls.add(h)
     return True

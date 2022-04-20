@@ -6,6 +6,8 @@ import os
 #  houses this file.
 import computer_constants
 
+DEBUG = False
+
 LOGGING_DIR = os.path.join(computer_constants.TOP_LEVEL_DIR, "logging")
 
 MYSQL_USER = computer_constants.MYSQL_USER

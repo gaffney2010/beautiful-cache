@@ -3,6 +3,7 @@ from typing import DefaultDict, Dict, List
 
 import bs4  # type: ignore
 
+from constants import *
 import shared_logic
 from shared_types import *
 
@@ -103,8 +104,10 @@ def mask_id(id: Id, mask: Id) -> Id:
 
 
 def isolate_id(html: Html, id: Id) -> Html:
-    if not shared_logic.validate_id(id, html):
-        raise BcException(f"Id {id} not valid for HTML")
+    if DEBUG:
+        # Takes too long in practice.
+        if not shared_logic.validate_id(id, html):
+            raise BcException(f"Id {id} not valid for HTML")
 
     def _isolate(working_ingredient: Ingredient, id: Id, ind: int) -> str:
         """Returns working_ingredient with its own tag on only the passed id as
@@ -148,9 +151,11 @@ def _get_id_part(tag_name: str, counter: DefaultDict[str, int]) -> str:
 
 def combine_ids(html: Html, ids: List[Id], id_mapper: Dict[Id, Id]) -> Html:
     # TODO: This probably needs a docstring
-    for id in ids:
-        if not shared_logic.validate_id(id, html):
-            raise BcException(f"Id {id} not valid for HTML")
+    if DEBUG:
+        # Takes too long in practice.
+        for id in ids:
+            if not shared_logic.validate_id(id, html):
+                raise BcException(f"Id {id} not valid for HTML")
 
     def _combine(
         working_prefix: Id, working_ingredient, ids: List[Id], ind: int
