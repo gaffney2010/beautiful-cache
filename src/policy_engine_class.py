@@ -247,8 +247,17 @@ class ConcreteDatabase(Database):
 
 
 class ConcreteFileSystem(FileSystem):
+    def _make_dir(self, policy: Policy) -> None:
+        # Make sure that the dirs exists
+        if not os.path.exists(policy):
+            os.makedirs(policy)
+        if not os.path.exists(os.path.join(policy, "data")):
+            os.makedirs(os.path.join(policy, "data"))
+
     def size(self, policy: Policy) -> Bytes:
         """Returns total size of all data files in policy."""
+        self._make_dir(policy)
+
         size = 0
         data_folder = os.path.join(policy, "data")
         for fn in os.listdir(data_folder):
@@ -259,17 +268,25 @@ class ConcreteFileSystem(FileSystem):
         return Bytes(size)
 
     def _read_fn(self, policy: Policy, fn: Filename) -> str:
+        self._make_dir(policy)
+
         with open(os.path.join(policy, fn), "r") as f:
             return f.read()
 
     def _write_fn(self, policy: Policy, fn: Filename, content: str) -> None:
+        self._make_dir(policy)
+
         with open(os.path.join(policy, fn), "w") as f:
             f.write(content)
 
     def _exists_fn(self, policy: Policy, fn: Filename) -> bool:
+        self._make_dir(policy)
+
         return os.path.exists(os.path.join(policy, fn))
 
     def _delete_fn(self, policy: Policy, fn: Filename) -> None:
+        self._make_dir(policy)
+
         os.remove(os.path.join(policy, fn))
 
 

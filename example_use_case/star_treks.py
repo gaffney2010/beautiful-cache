@@ -17,18 +17,10 @@ print("Hello")
 policy = "example_use_case/data"
 policy_in_sql = "example_use_case_data"
 
-# Ensure this folder exist, and is empty.
-if not os.path.exists(policy):
-    os.makedirs(policy)
-for files in os.listdir(policy):
-    # TODO: The function should make this folder if needed
-    if files == "data":
-        # Keep the folder.
-        continue
-    path = os.path.join(policy, files)
-    try:
-        shutil.rmtree(path)
-    except OSError:
+# Delete old data
+if os.path.exists(os.path.join(policy, "data")):
+    for files in os.listdir(os.path.join(policy, "data")):
+        path = os.path.join(policy, "data", files)
         os.remove(path)
 
 # Clear the db
