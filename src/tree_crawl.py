@@ -52,7 +52,7 @@ def trim(ingredient: Ingredient) -> str:
         return "".join(parts)
 
     # No children - replace many end spaces with a single space
-    result = str(ingredient).replace("\n", " ")
+    result = str(ingredient).replace("\n", " ").replace("\t", " ")
     if result[0].isspace():
         result = f" {result.lstrip()}"
     if result[-1].isspace():

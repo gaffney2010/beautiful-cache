@@ -4,7 +4,7 @@ from typing import List, Optional
 
 import bs4  # type: ignore
 
-from policy_engine_class import BcEngine  # type: ignore
+from policy_engine_class import BcEngine, ConcreteBcEngine
 import shared_logic
 from shared_types import *
 
@@ -107,13 +107,15 @@ class CacheTagList(object):
 
 
 class BeautifulCache(CacheTag):
-    def __init__(self, url: Url, policy: Policy, engine: BcEngine):
+    def __init__(self, url: Url, policy: Policy, engine: Optional[BcEngine] = None):
         self.url = url
         self.policy = policy
         # TODO: Default engine if not specified.  Make input param Optional then.
         self.engine = engine
+        if self.engine is None:
+            self.engine = ConcreteBcEngine
 
-        html = engine.read_url(self.policy, self.url)
+        html = self.engine.read_url(self.policy, self.url)
         soup = bs4.BeautifulSoup(html, features="lxml")
 
         super().__init__(soup, self.policy, url, self.engine)

@@ -111,7 +111,7 @@ class MockFileSystem(bc.FileSystem):
             sum(
                 len(content)
                 for fn, content in self.files.items()
-                if (fn.split("/")[0] == policy and fn[-5:] == ".data")
+                if (fn.split("/")[0] == policy and fn[-5:] == ".html")
             )
         )
 

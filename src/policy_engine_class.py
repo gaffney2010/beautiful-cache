@@ -1,19 +1,17 @@
-# type: ignore
+import logging
 import os
 import time
 
 import attr
-
-import mysql.connector
-
-# Omit this from mypy analysis because of the overload.
-from overload import overload
-import retrying
+import mysql.connector  # type: ignore
+import retrying  # type: ignore
 from selenium import webdriver
 
 from constants import *
 from shared_types import *
 import tree_crawl
+
+DRIVER_DELAY_SEC = 3
 
 
 @attr.s()
@@ -23,14 +21,12 @@ class BcEngine(object):
     file_system: FileSystem = attr.ib()
     clock: Clock = attr.ib()
 
-    @overload
-    def append(self, row: Row) -> None:
+    def append_row(self, row: Row) -> None:
         """Append to database with current time."""
         self.database._append(row, self.clock.now())
 
-    @append.add
     def append(self, policy: Policy, url: Url, id: Id) -> None:
-        self.append(make_row(policy, url, id))
+        self.append_row(make_row(policy, url, id))
 
     def read_url(self, policy: Policy, url: Url) -> Html:
         """Reads url, saving an access record to the database at the same time."""
@@ -88,14 +84,14 @@ class ConcreteUrlReader(UrlReader):
         super().__init__()
 
     @retrying.retry(wait_random_min=200, wait_random_max=400, stop_max_attempt_number=3)
-    def _read_url_to_string_helper(help_url: Url, web_driver):
+    def _read_url_to_string_helper(self, help_url: Url, web_driver):
         web_driver.driver().get(str(help_url))
         time.sleep(DRIVER_DELAY_SEC)
         return web_driver.driver().page_source
 
     def _read(self, url: Url) -> Html:
         with WebDriver() as driver:
-            page_text = _read_url_to_string_helper(url, self.driver)
+            page_text = self._read_url_to_string_helper(url, self.driver)
 
         return Html(page_text)
 
@@ -112,100 +108,132 @@ class ConcreteDatabase(Database):
         )
         super().__init__()
 
-    def _make_table(self, policy: Policy) -> None:
+    def _execute(self, cursor, query):
+        logging.error(query)
+        cursor.execute(query)
+
+    def _sanitize_policy(self, policy: Union[Policy, str]) -> str:
+        """Should be idempotent"""
+        return policy.replace("/", "_")
+
+    def _make_table(self, policy: Union[Policy, str]) -> None:
+        policy = self._sanitize_policy(policy)
+
         # If the table exists, do nothing.
         mycursor = self.db.cursor()
         mycursor.execute("SHOW TABLES;")
         for x in mycursor:
-            if x == policy:
+            if x[0] == policy:
                 return
 
-        mycursor.execute(
+        # TODO: Figure out how to make (url, id) a primary key.  (Too long.)
+        self._execute(
+            mycursor,
             f"""
         CREATE TABLE {policy} (
             url TEXT NOT NULL,
             id TEXT NOT NULL,
-            ts BIGINT NOT NULL,
-            PRIMARY KEY(url, id)
-        )
-        """
+            ts BIGINT NOT NULL
+        );
+        """,
         )
 
     # TODO: Should I return a success message or something?
-    def _append(self, row: Row, ts: Time) -> None:
-        self._make_table(row.policy)
+    def _append(self, row: Row, ts: Time, commit: bool = True) -> None:
+        """We can replace with REPLACE INTO after we get primary key working."""
+        policy = self._sanitize_policy(row.policy)
+        self._make_table(policy)
 
         mycursor = self.db.cursor()
-        mycursor.execute(
+
+        self._execute(
+            mycursor,
             f"""
-        REPLACE INTO {policy} (url, id, ts)
-        VALUES ({str(row.url)}, {str(row.id)}, {ts})
-        """
+        DELETE FROM {policy} WHERE url='{str(row.url)}' and id='{str(row.id)}'
+        """,
         )
-        self.db.commit()
+        self._execute(
+            mycursor,
+            f"""
+        INSERT INTO {policy} (url, id, ts)
+        VALUES ('{str(row.url)}', '{str(row.id)}', {ts})
+        """,
+        )
+        if commit:
+            self.db.commit()
 
     def pop(
-        self, policy: Policy, record: Optional[CompactionRecord] = None
+        self, policy: Union[Policy, str], record: Optional[CompactionRecord] = None
     ) -> Set[Url]:
         """Remove the records with the smallest timestamp and return.
 
         Additional recording to record if it's passed in.
         """
+        policy = self._sanitize_policy(policy)
         self._make_table(policy)
 
         mycursor = self.db.cursor()
-        mycursor.execute(
+        self._execute(
+            mycursor,
             f"""
         SELECT MIN(ts) my_min FROM {policy}
-        """
+        """,
         )
         my_min = mycursor.fetchone()[0]
 
-        mycursor.execute(
+        self._execute(
+            mycursor,
             f"""
         SELECT DISTINCT url FROM {policy} WHERE ts={my_min}
-        """
+        """,
         )
         result = {Url(row[0]) for row in mycursor.fetchall()}
 
-        mycursor.execute(
+        self._execute(
+            mycursor,
             f"""
         DELETE FROM {policy} WHERE ts={my_min}
-        """
+        """,
         )
         self.db.commit()
 
         return result
 
-    def exists(self, policy: Policy, url: Url) -> bool:
+    def exists(self, policy: Union[Policy, str], url: Url) -> bool:
         """Returns true if any records with the policy/url."""
+        policy = self._sanitize_policy(policy)
         self._make_table(policy)
 
         mycursor = self.db.cursor()
-        mycursor.execute(
+        self._execute(
+            mycursor,
             f"""
         SELECT * FROM {policy} WHERE url='{str(url)}';
-        """
+        """,
         )
         return mycursor.fetchone() is not None
 
-    def pop_query(self, policy: Policy, url: Url) -> Dict[Id, Time]:
+    def pop_query(self, policy: Union[Policy, str], url: Url) -> Dict[Id, Time]:
         """Deletes all records with the given policy/url.  Returns the IDs/timestamps
         for the deleted rows.
         """
+        policy = self._sanitize_policy(policy)
         self._make_table(policy)
 
-        mycursor.execute(
+        mycursor = self.db.cursor()
+        self._execute(
+            mycursor,
             f"""
-        SELECT DISTINCT id, ts FROM {policy} WHERE url={str(url)}
-        """
+        SELECT DISTINCT id, ts FROM {policy} WHERE url='{str(url)}'
+        """,
         )
         result = {Id(row[0]): Time(row[1]) for row in mycursor.fetchall()}
 
-        mycursor.execute(
+        self._execute(
+            mycursor,
             f"""
-        DELETE FROM {policy} WHERE url={str(url)}
-        """
+        DELETE FROM {policy} WHERE url='{str(url)}'
+        """,
         )
         self.db.commit()
 
@@ -214,7 +242,8 @@ class ConcreteDatabase(Database):
     def batch_load(self, rows: List[Tuple[Row, Time]]) -> None:
         """Put all these rows in the table with a timestamp"""
         for row, time in rows:
-            self._append(row, time)
+            self._append(row, time, commit=False)
+        self.db.commit()
 
 
 class ConcreteFileSystem(FileSystem):
@@ -247,7 +276,7 @@ class ConcreteFileSystem(FileSystem):
 class ConcreteClock(Clock):
     def now(self) -> Time:
         # Round to the nearest ms
-        return Time(int(time.monotonic * 1000))
+        return Time(int(time.monotonic() * 1000))
 
 
 ConcreteBcEngine = BcEngine(
