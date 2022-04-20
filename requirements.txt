@@ -3,7 +3,9 @@ beautifulsoup4
 lxml
 mysql-connector-python
 overload
+pandas
 pyyaml
 retrying
 selenium
+tabulate
 -e .
