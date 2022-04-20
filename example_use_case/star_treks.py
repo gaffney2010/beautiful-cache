@@ -22,10 +22,10 @@ policy = "example_use_case/data"
 policy_in_sql = "example_use_case_data"
 
 # Delete old data
-# if os.path.exists(os.path.join(policy, "data")):
-#     for files in os.listdir(os.path.join(policy, "data")):
-#         path = os.path.join(policy, "data", files)
-#         os.remove(path)
+if os.path.exists(os.path.join(policy, "data")):
+    for files in os.listdir(os.path.join(policy, "data")):
+        path = os.path.join(policy, "data", files)
+        os.remove(path)
 
 # Clear the db
 db = mysql.connector.connect(
@@ -77,7 +77,7 @@ for _ in range(2):
 summary()
 
 print("Compacting...")
-compact(policy, {"max_bytes": 4_600_000, "strategy": "thin"})
+compact(policy, {"max_bytes": 2_500_000, "strategy": "thin"})
 
 summary()
 

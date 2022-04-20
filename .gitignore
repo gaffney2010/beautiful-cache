@@ -6,4 +6,6 @@ src/computer_constants.py
 logging
 example_use_case/data
 
+*.prof
+
 .DS_Store
