@@ -20,6 +20,7 @@ def compact_fat(
 ) -> None:
     row_by_id = engine.database.pop_query(policy, url)
     ids = list(row_by_id.keys())
+    print(ids)
     ca = tree_crawl.common_ancestor(ids)
 
     # Update the cache file
