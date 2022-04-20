@@ -29,11 +29,11 @@ policy_in_sql = "example_use_case_data"
 
 # Clear the db
 db = mysql.connector.connect(
-            host="localhost",
-            user=MYSQL_USER,
-            password=MYSQL_PASSWORD,
-            database=MYSQL_DB,
-        )
+    host="localhost",
+    user=MYSQL_USER,
+    password=MYSQL_PASSWORD,
+    database=MYSQL_DB,
+)
 cursor = db.cursor()
 cursor.execute(f"DELETE FROM {policy_in_sql} WHERE 1=1;")
 db.commit()
@@ -49,6 +49,7 @@ for _ in range(10):
     for a in soup.find_all("a", {"rel": "bookmark"}):
         links.append(a.materialize()["href"])
 
+
 def summary():
     print("Downloaded first page.")
     num_files = len(os.listdir(os.path.join(policy, "data")))
@@ -62,6 +63,8 @@ def summary():
     db.commit()
     df = pd.DataFrame(df_rows)
     print(tabulate(df))
+
+
 summary()
 
 for _ in range(2):
@@ -75,7 +78,7 @@ for _ in range(2):
 summary()
 
 print("Compacting...")
-compact(policy, {"max_bytes": 4_800_000, "strategy": "fat"})
+compact(policy, {"max_bytes": 4_600_000, "strategy": "thin"})
 
 summary()
 

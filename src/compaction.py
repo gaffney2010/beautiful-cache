@@ -15,12 +15,17 @@ def compact_all(
         engine.file_system.delete(policy, url)
 
 
+# TODO: Add test for entire file compacted away.
 def compact_fat(
     policy: Policy, url: Url, engine: BcEngine, record: CompactionRecord
 ) -> None:
+    if not engine.database.exists(policy, url):
+        # Safe to delete file.
+        engine.file_system.delete(policy, url)
+        return
+
     row_by_id = engine.database.pop_query(policy, url)
     ids = list(row_by_id.keys())
-    print(ids)
     ca = tree_crawl.common_ancestor(ids)
 
     # Update the cache file
@@ -40,6 +45,11 @@ def compact_fat(
 def compact_thin(
     policy: Policy, url: Url, engine: BcEngine, record: CompactionRecord
 ) -> None:
+    if not engine.database.exists(policy, url):
+        # Safe to delete file.
+        engine.file_system.delete(policy, url)
+        return
+
     row_by_id = engine.database.pop_query(policy, url)
     ids = list(row_by_id.keys())
 
@@ -101,6 +111,7 @@ def compact(
         affected_urls = engine.database.pop(policy, record)
         record.affected_urls = affected_urls
         for url in affected_urls:
+            print(f"Compacting {url}")
             try:
                 file_compaction(policy, url, engine, record)
             except BcException as err:
