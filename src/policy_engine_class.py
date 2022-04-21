@@ -106,14 +106,9 @@ class ConcreteDatabase(Database):
             password=MYSQL_PASSWORD,
             database=MYSQL_DB,
         )
-        self.cursor = None
+        self.cursor = self.db.cursor()
+        self._policies = set()
         super().__init__()
-
-    def _execute(self, query):
-        self.cursor = self.db.cursor(buffered=True)
-        logging.debug(query)
-        self.cursor.execute(query)
-        self.db.commit()
 
     def _sanitize_policy(self, policy: Union[Policy, str]) -> str:
         """Should be idempotent"""
@@ -121,11 +116,14 @@ class ConcreteDatabase(Database):
 
     def _make_table(self, policy: Union[Policy, str]) -> None:
         policy = self._sanitize_policy(policy)
+        if policy in self._policies:
+            return
 
         # If the table exists, do nothing.
         self._execute("SHOW TABLES;")
         for x in self.cursor:
             if x[0] == policy:
+                self._policies.add(policy)
                 return
 
         # TODO: Figure out how to make (url, id) a primary key.  (Too long.)
@@ -139,23 +137,37 @@ class ConcreteDatabase(Database):
         """,
         )
 
-    # TODO: Should I return a success message or something?
-    def _append(self, row: Row, ts: Time) -> None:
+        self._policies.add(policy)
+
+    def _exe_core(self, cursor, query):
+        logging.debug(query)
+        cursor.execute(query)
+
+    def _execute(self, query):
+        self.cursor = self.db.cursor(buffered=True)
+        self._exe_core(self.cursor, query)
+        self.db.commit()
+
+    def __append(self, row: Row, ts: Time, exer) -> None:
         """We can replace with REPLACE INTO after we get primary key working."""
         policy = self._sanitize_policy(row.policy)
         self._make_table(policy)
 
-        self._execute(
+        exer(
             f"""
         DELETE FROM {policy} WHERE url='{str(row.url)}' and id='{str(row.id)}';
         """,
         )
-        self._execute(
+        exer(
             f"""
         INSERT INTO {policy} (url, id, ts)
         VALUES ('{str(row.url)}', '{str(row.id)}', {ts});
         """,
         )
+
+    # TODO: Should I return a success message or something?
+    def _append(self, row: Row, ts: Time) -> None:
+        self.__append(row, ts, self._execute)
 
     # TODO: Handle empty DB better...
     def pop(
@@ -228,10 +240,14 @@ class ConcreteDatabase(Database):
 
         return result
 
+    # TODO: Even with current optimizations, this runs too slowly.
     def batch_load(self, rows: List[Tuple[Row, Time]]) -> None:
         """Put all these rows in the table with a timestamp"""
+
+        cursor = self.db.cursor()
         for row, time in rows:
-            self._append(row, time)
+            self.__append(row, time, lambda query: self._exe_core(cursor, query))
+        self.db.commit()
 
 
 class ConcreteFileSystem(FileSystem):
@@ -287,6 +303,38 @@ class ConcreteClock(Clock):
 ConcreteBcEngine = BcEngine(
     url_reader=ConcreteUrlReader(),
     database=ConcreteDatabase(),
+    file_system=ConcreteFileSystem(),
+    clock=ConcreteClock(),
+)
+
+
+class LazyDatabase(ConcreteDatabase):
+    """Append-only database that runs faster, but must manually commit.
+    
+    Must create database (`bc`) manually before using."""
+
+    def __init__(self):
+        self.buffer: List[Tuple[Row, Time]] = list()
+        # TODO: Make a constant
+        self.max_size = 100
+        super().__init__()
+
+    # TODO: Should I return a success message or something?
+    def _append(self, row: Row, ts: Time) -> None:
+        """We can replace with REPLACE INTO after we get primary key working."""
+        self.buffer.append((row, ts))
+        if len(self.buffer) >= self.max_size:
+            self.batch_load(self.buffer)
+            self.buffer = list()
+
+    def commit(self) -> None:
+        self.batch_load(self.buffer)
+        self.buffer = list()
+
+
+LazyBcEngine = BcEngine(
+    url_reader=ConcreteUrlReader(),
+    database=LazyDatabase(),
     file_system=ConcreteFileSystem(),
     clock=ConcreteClock(),
 )

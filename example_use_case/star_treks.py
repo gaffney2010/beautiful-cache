@@ -33,7 +33,7 @@ class CachedUrlReader(ConcreteUrlReader):
         return Html(page_text)
 
 
-engine = ConcreteBcEngine
+engine = LazyBcEngine
 engine.url_reader = CachedUrlReader()
 
 print("Hello")
@@ -84,7 +84,7 @@ def summary():
     df = pd.DataFrame(df_rows)
     print(tabulate(df))
 
-
+engine.database.commit()
 summary()
 
 for _ in range(2):
@@ -95,10 +95,11 @@ for _ in range(2):
             if str(p.tag).find("Kirk") != -1:
                 p.materialize()
 
+engine.database.commit()
 summary()
 
 print("Compacting...")
-compact(policy, {"max_bytes": 2_500_000, "strategy": "thin"}, engine=engine)
+compact(policy, {"max_bytes": 2_500_000, "strategy": "thin"})
 
 summary()
 
