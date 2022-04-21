@@ -84,6 +84,7 @@ def summary():
     df = pd.DataFrame(df_rows)
     print(tabulate(df))
 
+
 engine.database.commit()
 summary()
 

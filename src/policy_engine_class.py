@@ -304,7 +304,7 @@ ConcreteBcEngine = BcEngine(
 
 class LazyDatabase(ConcreteDatabase):
     """Append-only database that runs faster, but must manually commit.
-    
+
     Must create database (`bc`) manually before using."""
 
     def __init__(self):
