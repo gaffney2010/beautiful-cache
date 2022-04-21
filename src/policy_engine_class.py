@@ -139,35 +139,32 @@ class ConcreteDatabase(Database):
 
         self._policies.add(policy)
 
-    def _exe_core(self, cursor, query):
-        logging.debug(query)
-        cursor.execute(query)
-
     def _execute(self, query):
         self.cursor = self.db.cursor(buffered=True)
-        self._exe_core(self.cursor, query)
+        logging.debug(query)
+        self.cursor.execute(query)
         self.db.commit()
 
-    def __append(self, row: Row, ts: Time, exer) -> None:
+    # TODO: Should I return a success message or something?
+    def __append(self, row: Row, ts: Time) -> None:
         """We can replace with REPLACE INTO after we get primary key working."""
         policy = self._sanitize_policy(row.policy)
         self._make_table(policy)
 
-        exer(
+        self._execute(
             f"""
         DELETE FROM {policy} WHERE url='{str(row.url)}' and id='{str(row.id)}';
         """,
         )
-        exer(
+        self._execute(
             f"""
         INSERT INTO {policy} (url, id, ts)
         VALUES ('{str(row.url)}', '{str(row.id)}', {ts});
         """,
         )
 
-    # TODO: Should I return a success message or something?
     def _append(self, row: Row, ts: Time) -> None:
-        self.__append(row, ts, self._execute)
+        self.__append(row, ts)
 
     # TODO: Handle empty DB better...
     def pop(
@@ -243,11 +240,8 @@ class ConcreteDatabase(Database):
     # TODO: Even with current optimizations, this runs too slowly.
     def batch_load(self, rows: List[Tuple[Row, Time]]) -> None:
         """Put all these rows in the table with a timestamp"""
-
-        cursor = self.db.cursor()
         for row, time in rows:
-            self.__append(row, time, lambda query: self._exe_core(cursor, query))
-        self.db.commit()
+            self.__append(row, time)
 
 
 class ConcreteFileSystem(FileSystem):

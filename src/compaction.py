@@ -30,6 +30,7 @@ def compact_fat(
 
     # Update the cache file
     html = engine.file_system.read(policy, url)
+    # TODO: Save and load soups instead of HTML to save time on processing...
     engine.file_system.write(policy, url, tree_crawl.isolate_id(html, ca))
 
     # Update the Requests to contain new addresses

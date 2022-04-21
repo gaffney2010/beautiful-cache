@@ -99,7 +99,7 @@ engine.database.commit()
 summary()
 
 print("Compacting...")
-compact(policy, {"max_bytes": 2_500_000, "strategy": "thin"})
+compact(policy, {"max_bytes": 2_500_000, "strategy": "fat"})
 
 summary()
 
