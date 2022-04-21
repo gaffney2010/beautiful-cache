@@ -19,7 +19,7 @@ from shared_types import *
 # Make a cached URL reader
 class CachedUrlReader(ConcreteUrlReader):
     def _read(self, url: Url) -> Html:
-        key = str(url).replace("/", "") + ".data"
+        key = str(url).replace("/", "") + ".html"
         if os.path.exists(os.path.join("example_use_case/data/raw_html", key)):
             with open(os.path.join("example_use_case/data/raw_html", key), "r") as f:
                 return Html(f.read())

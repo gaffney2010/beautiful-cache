@@ -197,6 +197,11 @@ class ConcreteDatabase(Database):
         )
         self.db.commit()
 
+        # Record, if record passed in.
+        if record is not None:
+            record.delete_through = my_min
+            record.records_deleted += result
+
         return result
 
     def pop(
