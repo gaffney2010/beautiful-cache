@@ -166,48 +166,79 @@ class ConcreteDatabase(Database):
     def _append(self, row: Row, ts: Time) -> None:
         self.__append(row, ts)
 
-    # TODO: Handle empty DB better...
-    def pop(
-        self, policy: Union[Policy, str], record: Optional[CompactionRecord] = None
+    def _pop_filter(
+        self,
+        policy: Union[Policy, str],
+        priority: str,
+        record: Optional[CompactionRecord] = None,
+        other_filters: str = "",
     ) -> Set[Url]:
-        """Remove the records with the smallest timestamp and return.
-
-        Additional recording to record if it's passed in.
-        """
         policy = self._sanitize_policy(policy)
         self._make_table(policy)
 
         self._execute(
             f"""
-        SELECT MIN(ts) my_min FROM {policy}
+        SELECT MIN(ts) my_min FROM {policy} WHERE 1=1{other_filters}
         """,
         )
         my_min = self.cursor.fetchone()[0]
 
         self._execute(
             f"""
-        SELECT DISTINCT url FROM {policy} WHERE ts={my_min}
+        SELECT DISTINCT url FROM {policy} WHERE ts={my_min}{other_filters}
         """,
         )
         result = {Url(row[0]) for row in self.cursor.fetchall()}
 
         self._execute(
             f"""
-        DELETE FROM {policy} WHERE ts={my_min}
+        DELETE FROM {policy} WHERE ts={my_min}{other_filters}
         """,
         )
         self.db.commit()
 
         return result
 
-    def exists(self, policy: Union[Policy, str], url: Url) -> bool:
+    def pop(
+        self,
+        policy: Union[Policy, str],
+        priority: str,
+        record: Optional[CompactionRecord] = None,
+    ) -> Set[Url]:
+        """Remove the records with the smallest timestamp and return.
+
+        Additional recording to record if it's passed in.
+        """
+        if priority in ("root-first", "root-only"):
+            if self.exists(policy, other_filters=f" AND id=''"):
+                return self._pop_filter(
+                    policy, priority, record, other_filters=f" AND id=''"
+                )
+
+        if priority in ("root-first", "fifo"):
+            if self.exists(policy):
+                return self._pop_filter(policy, priority, record)
+
+        # Nothing left to pop
+        return set()
+
+    def exists(
+        self,
+        policy: Union[Policy, str],
+        url: Optional[Url] = None,
+        other_filters: str = "",
+    ) -> bool:
         """Returns true if any records with the policy/url."""
         policy = self._sanitize_policy(policy)
         self._make_table(policy)
 
+        url_filter = ""
+        if url is not None:
+            url_filter = f" AND url='{str(url)}'"
+
         self._execute(
             f"""
-        SELECT * FROM {policy} WHERE url='{str(url)}';
+        SELECT * FROM {policy} WHERE 1=1{url_filter}{other_filters};
         """,
         )
         result = self.cursor.fetchone() is not None

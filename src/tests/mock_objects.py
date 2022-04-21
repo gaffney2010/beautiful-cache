@@ -40,7 +40,7 @@ class MockDatabase(bc.Database):
         return len(self._query(policy, url)) > 0
 
     def pop(
-        self, policy: Policy, record: Optional[CompactionRecord] = None
+        self, policy: Policy, priority: str, record: Optional[CompactionRecord] = None
     ) -> Set[Url]:
         """Remove the records with the smallest timestamp and return the URLs.
 
@@ -49,6 +49,7 @@ class MockDatabase(bc.Database):
         if not self.exists(policy):
             raise BcException("Trying to pop from an empty DB")
 
+        # TODO: Add test for priority = "root-only"
         match_policy = [(v, k) for k, v in self._query(policy).items()]
         min_time = sorted(match_policy, key=lambda x: x[0])[0][0]
         result = [k for (v, k) in match_policy if v == min_time]

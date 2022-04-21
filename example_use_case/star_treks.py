@@ -88,19 +88,19 @@ def summary():
 engine.database.commit()
 summary()
 
-for _ in range(2):
-    for link in links:
-        print(f"Downloading {link}...")
-        soup = bc.BeautifulCache(Url(link), policy, engine=engine)
-        for p in soup.find_all("p"):
-            if str(p.tag).find("Kirk") != -1:
-                p.materialize()
+for link in links:
+    print(f"Downloading {link}...")
+    soup = bc.BeautifulCache(Url(link), policy, engine=engine)
+    for p in soup.find_all("p"):
+        if str(p.tag).find("Kirk") != -1:
+            p.materialize()
 
 engine.database.commit()
 summary()
 
 print("Compacting...")
-compact(policy, {"max_bytes": 2_500_000, "strategy": "fat"})
+# Should only compact roots
+compact(policy, {"max_bytes": 0, "strategy": "fat", "priority": "root-only"})
 
 summary()
 

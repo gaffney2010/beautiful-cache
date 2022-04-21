@@ -168,7 +168,7 @@ class Database(object):
         raise NotImplementedError
 
     def pop(
-        self, policy: Policy, record: Optional[CompactionRecord] = None
+        self, policy: Policy, priority: str, record: Optional[CompactionRecord] = None
     ) -> Set[Url]:
         """Remove the records with the smallest timestamp and return.
 

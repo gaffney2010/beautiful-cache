@@ -87,6 +87,9 @@ def compact(
             if field in y and field not in settings:
                 settings[field] = y[field]
 
+    if "priority" not in settings:
+        settings["priority"] = "fifo"
+
     for required_field in ("max_bytes", "strategy"):
         if required_field not in settings:
             raise BcException(
@@ -109,7 +112,10 @@ def compact(
 
     max_bytes = settings["max_bytes"]
     while engine.file_system.size(policy) > max_bytes:
-        affected_urls = engine.database.pop(policy, record)
+        affected_urls = engine.database.pop(policy, settings["priority"], record)
+        if len(affected_urls) == 0:
+            # We've popped all we could.
+            break
         record.affected_urls = affected_urls
         for url in affected_urls:
             print(f"Compacting {url}")

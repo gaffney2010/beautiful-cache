@@ -91,6 +91,14 @@ The lowest common parent is the `div` tag.  Notice that the parent tags of the `
 
 Notice that subtags of "body:0/div:0/p:2" are included.
 
+### priority
+
+If set to `fifo` (defualt), then will delete the oldest rows in Requests first.
+
+If set to `root-first`, then will delete root entries in Requests (id="") in order, then other rows in order.
+
+If set to `root-only`, then will delete root entries in order, then stop.  May not be less than `max_bytes`.
+
 ## Compaction
 Compaction works by repeatedly deleting the oldest records in the Requests database, then replacing the affected URL caches with an updated version, per the specified request strategy.  This is repeated until only `max_bytes` space is taken up by the files.
 
