@@ -1,11 +1,10 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name="beautifulcache",
     description="Caching Wrapper for BeautifulSoup",
     author="T.J. Gaffney",
-    package_dir={"": "src"},
-    packages=find_packages("src"),
+    packages=["beautifulcache"],
     install_requires=[
         "attrs==21.4.0",
         "beautifulsoup4==4.11.1",
