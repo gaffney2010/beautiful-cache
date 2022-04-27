@@ -2,7 +2,7 @@ from typing import Tuple
 
 import bs4  # type: ignore
 
-from shared_types import *
+from .shared_types import *
 
 
 def is_root(node: Ingredient) -> bool:

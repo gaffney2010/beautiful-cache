@@ -2,9 +2,10 @@
 *.egg-info
 .mypy_cache
 
-src/computer_constants.py
-logging
+computer_constants.py
+*geckodriver.log
 example_use_case/data
+example_use_case/links-data
 
 *.prof
 

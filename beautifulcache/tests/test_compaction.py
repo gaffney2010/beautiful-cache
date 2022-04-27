@@ -1,10 +1,10 @@
 import unittest
 
-import compaction
-import policy_engine_class
-from shared_types import *
-import tree_crawl
-from tests.mock_objects import *
+from beautifulcache import compaction
+from beautifulcache import policy_engine_class
+from beautifulcache.shared_types import *
+from beautifulcache import tree_crawl
+from beautifulcache.tests.mock_objects import *
 
 
 class TestCompaction(unittest.TestCase):

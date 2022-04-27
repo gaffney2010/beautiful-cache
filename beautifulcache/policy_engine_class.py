@@ -7,9 +7,9 @@ import mysql.connector  # type: ignore
 import retrying  # type: ignore
 from selenium import webdriver
 
-from constants import *
-from shared_types import *
-import tree_crawl
+from .constants import *
+from .shared_types import *
+from . import tree_crawl
 
 DRIVER_DELAY_SEC = 3
 
@@ -99,13 +99,8 @@ class ConcreteUrlReader(UrlReader):
 class ConcreteDatabase(Database):
     """Must create database (`bc`) manually before using."""
 
-    def __init__(self):
-        self.db = mysql.connector.connect(
-            host="localhost",
-            user=MYSQL_USER,
-            password=MYSQL_PASSWORD,
-            database=MYSQL_DB,
-        )
+    def __init__(self, mysql_db):
+        self.db = mysql_db
         self.cursor = self.db.cursor()
         self._policies = set()
         super().__init__()
@@ -330,24 +325,16 @@ class ConcreteClock(Clock):
         return Time(int(time.monotonic() * 1000))
 
 
-ConcreteBcEngine = BcEngine(
-    url_reader=ConcreteUrlReader(),
-    database=ConcreteDatabase(),
-    file_system=ConcreteFileSystem(),
-    clock=ConcreteClock(),
-)
-
-
 class LazyDatabase(ConcreteDatabase):
     """Append-only database that runs faster, but must manually commit.
 
     Must create database (`bc`) manually before using."""
 
-    def __init__(self):
+    def __init__(self, mysql_db):
         self.buffer: List[Tuple[Row, Time]] = list()
         # TODO: Make a constant
         self.max_size = 100
-        super().__init__()
+        super().__init__(mysql_db)
 
     # TODO: Should I return a success message or something?
     def _append(self, row: Row, ts: Time) -> None:
@@ -362,9 +349,15 @@ class LazyDatabase(ConcreteDatabase):
         self.buffer = list()
 
 
-LazyBcEngine = BcEngine(
-    url_reader=ConcreteUrlReader(),
-    database=LazyDatabase(),
-    file_system=ConcreteFileSystem(),
-    clock=ConcreteClock(),
-)
+def bc_engine_factory(mysql_db, lazy: bool) -> BcEngine:
+    if lazy:
+        db = LazyDatabase(mysql_db)
+    else:
+        db = ConcreteDatabase(mysql_db)
+
+    return BcEngine(
+        url_reader=ConcreteUrlReader(),
+        database=db,
+        file_system=ConcreteFileSystem(),
+        clock=ConcreteClock(),
+    )

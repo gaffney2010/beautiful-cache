@@ -1,9 +1,8 @@
 from typing import Dict, Optional, Tuple
-from wsgiref.headers import tspecials
 
-import bc
-import policy_engine_class
-from shared_types import *
+from beautifulcache import bc
+from beautifulcache import policy_engine_class
+from beautifulcache.shared_types import *
 
 
 # Takes a dict at init time.

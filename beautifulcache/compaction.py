@@ -2,9 +2,9 @@ from typing import Any, Dict, Optional
 
 import yaml  # type: ignore
 
-from policy_engine_class import BcEngine, ConcreteBcEngine  # type: ignore
-from shared_types import *
-import tree_crawl
+from .policy_engine_class import BcEngine
+from .shared_types import *
+from . import tree_crawl
 
 
 def compact_all(
@@ -72,13 +72,11 @@ def compact_thin(
 # TODO: Default engine.
 def compact(
     policy: Policy,
+    engine: BcEngine,
     settings: Optional[Dict[str, Any]] = None,
-    engine: Optional[BcEngine] = None,
 ) -> CompactionRecord:
     if settings is None:
         settings = {}
-    if engine is None:
-        engine = ConcreteBcEngine
 
     if engine.file_system.exists(policy, "settings.yaml"):
         y = yaml.safe_load(engine.file_system.read(policy, "settings.yaml"))

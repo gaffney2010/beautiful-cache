@@ -3,9 +3,9 @@ from typing import DefaultDict, Dict, List
 
 import bs4  # type: ignore
 
-from constants import *
-import shared_logic
-from shared_types import *
+from .constants import *
+from . import shared_logic
+from .shared_types import *
 
 # TODO: Test these functions directly.
 

@@ -16,5 +16,5 @@ setup(
         "retrying==1.3.3",
         "selenium==4.1.3",
         "tabulate==0.8.9",
-    ]
+    ],
 )

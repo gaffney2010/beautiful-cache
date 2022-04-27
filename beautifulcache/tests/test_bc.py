@@ -2,10 +2,10 @@ import unittest
 
 import bs4  # type: ignore
 
-import bc
-from shared_types import *
-from tests.mock_objects import *
-import tree_crawl
+from beautifulcache import bc
+from beautifulcache.shared_types import *
+from beautifulcache.tests.mock_objects import *
+from beautifulcache import tree_crawl
 
 
 class TestEndToEnd(unittest.TestCase):

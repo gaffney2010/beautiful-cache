@@ -2,8 +2,8 @@ import unittest
 
 import bs4
 
-from shared_types import *
-import tree_crawl
+from beautifulcache.shared_types import *
+from beautifulcache import tree_crawl
 
 
 class TestTreeCrawl(unittest.TestCase):
