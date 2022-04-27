@@ -107,7 +107,7 @@ class ConcreteDatabase(Database):
 
     def _sanitize_policy(self, policy: Union[Policy, str]) -> str:
         """Should be idempotent"""
-        return policy.replace("/", "_")
+        return policy.replace("/", "_").replace("-", "_")
 
     def _make_table(self, policy: Union[Policy, str]) -> None:
         policy = self._sanitize_policy(policy)
@@ -122,6 +122,7 @@ class ConcreteDatabase(Database):
                 return
 
         # TODO: Figure out how to make (url, id) a primary key.  (Too long.)
+        # TODO: Fail LOUDLY.
         self._execute(
             f"""
         CREATE TABLE {policy} (
