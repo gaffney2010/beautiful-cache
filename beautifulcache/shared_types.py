@@ -135,6 +135,9 @@ def make_row(
         id = str(id)
     if isinstance(url, Url):
         url = str(url)
+    if url.find("&url=") != -1:
+        # This one weird hack.
+        url = url.split("&url=")[1]
     return Row(policy=Policy(policy), url=url, id=id)
 
 

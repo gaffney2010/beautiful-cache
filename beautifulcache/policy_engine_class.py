@@ -23,9 +23,6 @@ class BcEngine(object):
 
     def append_row(self, row: Row) -> None:
         """Append to database with current time."""
-        if row.url._x.find("&url=") != -1:
-            # This one weird hack.
-            row.url._x = row.url._x.split("&url=")[1]
         self.database._append(row, self.clock.now())
 
     def append(self, policy: Policy, url: Url, id: Id) -> None:
