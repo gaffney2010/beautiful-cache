@@ -20,7 +20,8 @@ db = mysql.connector.connect(
     password=MYSQL_PASSWORD,
     database="bc",
 )
-engine = bc.bc_engine_factory(db, lazy=True)
+web_driver = bc.WebDriver()
+engine = bc.bc_engine_factory(db, web_driver lazy=True)
 
 tos_index = "https://trekfanfiction.net/category/the-original-series/#14"
 policy = "example_use_case/links-data"
@@ -32,3 +33,6 @@ for a in soup.find_all("a", {"rel": "bookmark"}):
 
 for link in links:
     print(link)
+
+# Don't forget this!
+web_driver.quit()

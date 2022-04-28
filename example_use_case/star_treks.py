@@ -40,8 +40,12 @@ cursor.execute(f"DELETE FROM {policy_in_sql} WHERE 1=1;")
 db.commit()
 
 
+web_driver = bc.WebDriver()
+
+
 tos_index = "https://trekfanfiction.net/category/the-original-series/#14"
-engine = bc.bc_engine_factory(db, lazy=True)  # Lazy is better for reading.
+# TODO: Change to lazy = True when that works.
+engine = bc.bc_engine_factory(db, web_driver, lazy=False)
 
 
 # Should only download once, despite being asked 10 times.
@@ -69,7 +73,7 @@ def summary():
     print(tabulate(df))
 
 
-engine.database.commit()  # Must be manually commited with lazy
+# engine.database.commit()  # Must be manually commited with lazy
 summary()
 
 for link in links:
@@ -80,12 +84,12 @@ for link in links:
             # Only materialize paragraphs with Kirk in them.
             p.materialize()
 
-engine.database.commit()
+# engine.database.commit()
 summary()
 
 print("Compacting...")
 
-compaction_engine = bc.bc_engine_factory(db, lazy=False)  # Non-lazy for compactions
+compaction_engine = bc.bc_engine_factory(db, web_driver, lazy=False)  # Non-lazy for compactions
 
 # Should only compact roots, using thin strategy
 bc.compact(
@@ -95,6 +99,9 @@ bc.compact(
 )
 
 summary()
+
+# Do not forget this!
+web_driver.quit()
 
 # You can look at the HTML files now.  Only Kirk-related paragraphs remain.
 

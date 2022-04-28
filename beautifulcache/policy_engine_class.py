@@ -71,16 +71,20 @@ class WebDriver(object):
             logging.debug("Finished initializing driver.")
         return self._driver
 
-    def __exit__(self, type, value, tb):
+    def quit(self):
         """Clean-up on exit."""
         if self._driver:
             self._driver.quit()
         self._driver = None
 
+    def __exit__(self, type, value, tb):
+        """Clean-up on exit."""
+        self.quit()
+
 
 class ConcreteUrlReader(UrlReader):
-    def __init__(self):
-        self.driver = WebDriver()
+    def __init__(self, driver):
+        self.driver = driver
         super().__init__()
 
     @retrying.retry(wait_random_min=200, wait_random_max=400, stop_max_attempt_number=3)
@@ -90,9 +94,7 @@ class ConcreteUrlReader(UrlReader):
         return web_driver.driver().page_source
 
     def _read(self, url: Url) -> Html:
-        with WebDriver() as driver:
-            page_text = self._read_url_to_string_helper(url, self.driver)
-
+        page_text = self._read_url_to_string_helper(url, self.driver)
         return Html(page_text)
 
 
@@ -349,7 +351,7 @@ class LazyDatabase(ConcreteDatabase):
         self.buffer = list()
 
 
-def bc_engine_factory(mysql_db, lazy: bool) -> BcEngine:
+def bc_engine_factory(mysql_db, driver, lazy: bool) -> BcEngine:
     if lazy:
         raise NotImplementedError
         # TODO: Fix this cross-repo!!
@@ -358,7 +360,7 @@ def bc_engine_factory(mysql_db, lazy: bool) -> BcEngine:
         db = ConcreteDatabase(mysql_db)
 
     return BcEngine(
-        url_reader=ConcreteUrlReader(),
+        url_reader=ConcreteUrlReader(driver),
         database=db,
         file_system=ConcreteFileSystem(),
         clock=ConcreteClock(),
