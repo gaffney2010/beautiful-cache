@@ -5,6 +5,7 @@ setup(
     description="Caching Wrapper for BeautifulSoup",
     author="T.J. Gaffney",
     packages=["beautifulcache"],
+    version="1.0.0",
     install_requires=[
         "attrs==21.4.0",
         "beautifulsoup4==4.11.1",
