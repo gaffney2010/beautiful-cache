@@ -4,7 +4,6 @@
 import os
 import time
 
-import mysql.connector
 import pandas as pd
 from tabulate import tabulate
 
@@ -14,12 +13,7 @@ import beautifulcache as bc
 from computer_constants import MYSQL_USER, MYSQL_PASSWORD
 
 
-db = mysql.connector.connect(
-    host="localhost",
-    user=MYSQL_USER,
-    password=MYSQL_PASSWORD,
-    database="bc",
-)
+db = sqlite3.connect(f"{policy}/requests.db")
 web_driver = bc.WebDriver()
 engine = bc.bc_engine_factory(db, web_driver lazy=True)
 

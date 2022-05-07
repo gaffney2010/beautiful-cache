@@ -12,6 +12,7 @@ Within a directory, the file system would include data, a Requests database, and
 policy_name/
 |-- data/
 |-- settings.yaml (optional)
+|-- requests.db (standard location)
 ```
 
 ## Request database

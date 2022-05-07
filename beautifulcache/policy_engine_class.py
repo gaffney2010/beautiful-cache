@@ -3,7 +3,6 @@ import os
 import time
 
 import attr
-import mysql.connector  # type: ignore
 import retrying  # type: ignore
 from selenium import webdriver
 
@@ -116,17 +115,10 @@ class ConcreteDatabase(Database):
         if policy in self._policies:
             return
 
-        # If the table exists, do nothing.
-        self._execute("SHOW TABLES;")
-        for x in self.cursor.fetchall():
-            if x[0] == policy:
-                self._policies.add(policy)
-                return
-
         # TODO: Figure out how to make (url, id) a primary key.  (Too long.)
         self._execute(
             f"""
-        CREATE TABLE {policy} (
+        CREATE TABLE IF NOT EXISTS {policy} (
             url TEXT NOT NULL,
             id TEXT NOT NULL,
             ts BIGINT NOT NULL
@@ -137,7 +129,7 @@ class ConcreteDatabase(Database):
         self._policies.add(policy)
 
     def _execute(self, query):
-        self.cursor = self.db.cursor(buffered=True)
+        self.cursor = self.db.cursor()
         logging.debug(query)
         self.cursor.execute(query)
         self.db.commit()
@@ -324,7 +316,7 @@ class ConcreteFileSystem(FileSystem):
 class ConcreteClock(Clock):
     def now(self) -> Time:
         # Round to the nearest ms
-        return Time(int(time.monotonic() * 1000))
+        return Time(int(time.time() * 1000))
 
 
 class LazyDatabase(ConcreteDatabase):

@@ -4,9 +4,9 @@ Should be run from Beautiful-Cache top-level dir.
 """
 
 import os
+import sqlite3
 import time
 
-import mysql.connector
 import pandas as pd
 from tabulate import tabulate
 
@@ -29,15 +29,10 @@ if os.path.exists(os.path.join(policy, "data")):
         os.remove(path)
 
 # Clear the db
-db = mysql.connector.connect(
-    host="localhost",
-    user=MYSQL_USER,
-    password=MYSQL_PASSWORD,
-    database="bc",
-)
-cursor = db.cursor()
-cursor.execute(f"DELETE FROM {policy_in_sql} WHERE 1=1;")
-db.commit()
+db = sqlite3.connect(f"{policy}/requests.db")
+# cursor = db.cursor()
+# cursor.execute(f"DELETE FROM {policy_in_sql} WHERE 1=1;")
+# db.commit()
 
 
 web_driver = bc.WebDriver()
