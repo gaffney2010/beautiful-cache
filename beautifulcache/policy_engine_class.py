@@ -118,7 +118,7 @@ class ConcreteDatabase(Database):
 
         # If the table exists, do nothing.
         self._execute("SHOW TABLES;")
-        for x in self.cursor:
+        for x in self.cursor.fetchall():
             if x[0] == policy:
                 self._policies.add(policy)
                 return

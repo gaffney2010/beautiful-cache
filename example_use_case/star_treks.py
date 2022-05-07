@@ -50,7 +50,7 @@ engine = bc.bc_engine_factory(db, web_driver, lazy=False)
 
 # Should only download once, despite being asked 10 times.
 for _ in range(10):
-    print(f"{_} @ {time.monotonic()}")
+    print(f"{_} @ {time.time()}")
     # TODO: A signature that doesn't require Url-type
     soup = bc.BeautifulCache(tos_index, policy, engine=engine)
     links = list()
