@@ -130,6 +130,10 @@ This simply tells these records to record with the same timestamp.  Whenever com
 
 ## Sample code
 ```python
+# Notice that isolation_level=None, to support parallelization.
+db = sqlite3.connect(f"{policy}/requests.db", isolation_level=None)
+web_driver = bc.WebDriver()
+engine = bc.bc_engine_factory(db, web_driver, lazy=False)
 soup = bc.BeautifulCache(url, policy)
 schools = soup.find_all("td", {"data-stat": "school_name"})
 # The materialize returns the usual BeautifulSoup objects.
