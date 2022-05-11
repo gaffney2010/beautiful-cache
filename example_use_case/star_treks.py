@@ -29,18 +29,35 @@ if os.path.exists(os.path.join(policy, "data")):
         os.remove(path)
 
 # Clear the db
-db = sqlite3.connect(f"{policy}/requests.db")
-# cursor = db.cursor()
-# cursor.execute(f"DELETE FROM {policy_in_sql} WHERE 1=1;")
-# db.commit()
+db = sqlite3.connect(f"{policy}/requests.db", isolation_level=None)
+cursor = db.cursor()
+cursor.execute(f"DELETE FROM {policy_in_sql} WHERE 1=1;")
+db.commit()
 
 
 web_driver = bc.WebDriver()
 
 
+# Make a cached URL reader
+class CachedUrlReader(bc.policy_engine_class.ConcreteUrlReader):
+    def _read(self, url: bc.Url) -> bc.Html:
+        key = str(url).replace("/", "") + ".data"
+        if os.path.exists(os.path.join("example_use_case/data/raw_html", key)):
+            with open(os.path.join("example_use_case/data/raw_html", key), "r") as f:
+                return bc.Html(f.read())
+
+        page_text = self._read_url_to_string_helper(url, self.driver)
+
+        with open(os.path.join("example_use_case/data/raw_html", key), "w") as f:
+            f.write(page_text)
+
+        return bc.Html(page_text)
+
+
 tos_index = "https://trekfanfiction.net/category/the-original-series/#14"
 # TODO: Change to lazy = True when that works.
 engine = bc.bc_engine_factory(db, web_driver, lazy=False)
+engine.url_reader = CachedUrlReader(web_driver)
 
 
 # Should only download once, despite being asked 10 times.
@@ -84,7 +101,9 @@ summary()
 
 print("Compacting...")
 
-compaction_engine = bc.bc_engine_factory(db, web_driver, lazy=False)  # Non-lazy for compactions
+compaction_engine = bc.bc_engine_factory(
+    db, web_driver, lazy=False
+)  # Non-lazy for compactions
 
 # Should only compact roots, using thin strategy
 bc.compact(

@@ -11,11 +11,7 @@ from .shared_types import *
 
 class CacheTag(object):
     def __init__(
-        self,
-        tag: Ingredient,
-        policy: Policy,
-        url: Url,
-        engine: BcEngine,
+        self, tag: Ingredient, policy: Policy, url: Url, engine: BcEngine,
     ):
         self.tag = tag
         self.policy = policy

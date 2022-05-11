@@ -83,8 +83,7 @@ class TestTreeCrawl(unittest.TestCase):
 
     def test_ca_empty_id(self):
         self.assertEqual(
-            tree_crawl.common_ancestor([Id("a:0/b:1/c:0/d:1"), Id("")]),
-            Id(""),
+            tree_crawl.common_ancestor([Id("a:0/b:1/c:0/d:1"), Id("")]), Id(""),
         )
 
     def test_ca_nothing_in_common(self):
@@ -101,8 +100,7 @@ class TestTreeCrawl(unittest.TestCase):
 
     def test_ca_index(self):
         self.assertEqual(
-            tree_crawl.common_ancestor([Id("a:0/b:0"), Id("a:0/b:1")]),
-            Id("a:0"),
+            tree_crawl.common_ancestor([Id("a:0/b:0"), Id("a:0/b:1")]), Id("a:0"),
         )
 
     def test_ca_child_id(self):
@@ -297,14 +295,10 @@ class TestTreeCrawl(unittest.TestCase):
         id_mapper = dict()
         result = tree_crawl.combine_ids(
             html,
-            [
-                Id("html:0/body:0/div:0/p:1"),
-                Id("html:0/body:0/div:0/p:1/a:0"),
-            ],
+            [Id("html:0/body:0/div:0/p:1"), Id("html:0/body:0/div:0/p:1/a:0"),],
             id_mapper,
         )
 
         self.assertEqual(
-            result,
-            "<html><body><div><p><a>3</a><a>4</a></p></div></body></html>",
+            result, "<html><body><div><p><a>3</a><a>4</a></p></div></body></html>",
         )

@@ -71,9 +71,7 @@ def compact_thin(
 
 # TODO: Default engine.
 def compact(
-    policy: Policy,
-    engine: BcEngine,
-    settings: Optional[Dict[str, Any]] = None,
+    policy: Policy, engine: BcEngine, settings: Optional[Dict[str, Any]] = None,
 ) -> CompactionRecord:
     if settings is None:
         settings = {}

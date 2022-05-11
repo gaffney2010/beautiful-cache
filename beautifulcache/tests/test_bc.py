@@ -62,14 +62,10 @@ class TestEndToEnd(unittest.TestCase):
                 make_row("test_policy", "test_url", ""): 0,
                 # Timestamps determined by the number of clicks that have passed.
                 make_row(
-                    "test_policy",
-                    "test_url",
-                    "html:0/body:0/table:0/tr:0/td:0/a:0",
+                    "test_policy", "test_url", "html:0/body:0/table:0/tr:0/td:0/a:0",
                 ): 1,
                 make_row(
-                    "test_policy",
-                    "test_url",
-                    "html:0/body:0/table:0/tr:1/td:1/a:0",
+                    "test_policy", "test_url", "html:0/body:0/table:0/tr:1/td:1/a:0",
                 ): 2,
             },
         )

@@ -98,13 +98,17 @@ class ConcreteUrlReader(UrlReader):
 
 
 class ConcreteDatabase(Database):
-    """Must create database (`bc`) manually before using."""
+    """Must create database (`bc`) manually before using.  Assumes auto-commit or that
+    users will commit."""
 
     def __init__(self, mysql_db):
         self.db = mysql_db
-        self.cursor = self.db.cursor()
         self._policies = set()
         super().__init__()
+
+    def _execute(self, cursor, query):
+        logging.debug(query)
+        cursor.execute(query)
 
     def _sanitize_policy(self, policy: Union[Policy, str]) -> str:
         """Should be idempotent"""
@@ -116,7 +120,9 @@ class ConcreteDatabase(Database):
             return
 
         # TODO: Figure out how to make (url, id) a primary key.  (Too long.)
+        cursor = self.db.cursor()
         self._execute(
+            cursor,
             f"""
         CREATE TABLE IF NOT EXISTS {policy} (
             url TEXT NOT NULL,
@@ -128,29 +134,28 @@ class ConcreteDatabase(Database):
 
         self._policies.add(policy)
 
-    def _execute(self, query):
-        self.cursor = self.db.cursor()
-        logging.debug(query)
-        self.cursor.execute(query)
-        self.db.commit()
-
     # TODO: Should I return a success message or something?
     def __append(self, row: Row, ts: Time) -> None:
         """We can replace with REPLACE INTO after we get primary key working."""
         policy = self._sanitize_policy(row.policy)
         self._make_table(policy)
 
+        cursor = self.db.cursor()
+        self._execute(cursor, "BEGIN TRANSACTION;")
         self._execute(
+            cursor,
             f"""
         DELETE FROM {policy} WHERE url='{str(row.url)}' and id='{str(row.id)}';
         """,
         )
         self._execute(
+            cursor,
             f"""
         INSERT INTO {policy} (url, id, ts)
         VALUES ('{str(row.url)}', '{str(row.id)}', {ts});
         """,
         )
+        self._execute(cursor, "COMMIT;")
 
     def _append(self, row: Row, ts: Time) -> None:
         self.__append(row, ts)
@@ -165,26 +170,32 @@ class ConcreteDatabase(Database):
         policy = self._sanitize_policy(policy)
         self._make_table(policy)
 
+        cursor = self.db.cursor()
+        self._execute(cursor, "BEGIN TRANSACTION;")
+
         self._execute(
+            cursor,
             f"""
         SELECT MIN(ts) my_min FROM {policy} WHERE 1=1{other_filters}
         """,
         )
-        my_min = self.cursor.fetchone()[0]
+        my_min = cursor.fetchone()[0]
 
         self._execute(
+            cursor,
             f"""
         SELECT DISTINCT url FROM {policy} WHERE ts={my_min}{other_filters}
         """,
         )
-        result = {Url(row[0]) for row in self.cursor.fetchall()}
+        result = {Url(row[0]) for row in cursor.fetchall()}
 
         self._execute(
+            cursor,
             f"""
         DELETE FROM {policy} WHERE ts={my_min}{other_filters}
         """,
         )
-        self.db.commit()
+        self._execute(cursor, "COMMIT;")
 
         # Record, if record passed in.
         if record is not None:
@@ -230,13 +241,14 @@ class ConcreteDatabase(Database):
         if url is not None:
             url_filter = f" AND url='{str(url)}'"
 
+        cursor = self.db.cursor()
         self._execute(
+            cursor,
             f"""
         SELECT * FROM {policy} WHERE 1=1{url_filter}{other_filters};
         """,
         )
-        result = self.cursor.fetchone() is not None
-        self.db.commit()
+        result = cursor.fetchone() is not None
         return result
 
     def pop_query(self, policy: Union[Policy, str], url: Url) -> Dict[Id, Time]:
@@ -246,19 +258,25 @@ class ConcreteDatabase(Database):
         policy = self._sanitize_policy(policy)
         self._make_table(policy)
 
+        cursor = self.db.cursor()
+        self._execute(cursor, "BEGIN TRANSACTION;")
+
         self._execute(
+            cursor,
             f"""
         SELECT DISTINCT id, ts FROM {policy} WHERE url='{str(url)}'
         """,
         )
-        result = {Id(row[0]): Time(row[1]) for row in self.cursor.fetchall()}
+        result = {Id(row[0]): Time(row[1]) for row in cursor.fetchall()}
 
         self._execute(
+            cursor,
             f"""
         DELETE FROM {policy} WHERE url='{str(url)}'
         """,
         )
-        self.db.commit()
+
+        self._execute(cursor, "COMMIT;")
 
         return result
 

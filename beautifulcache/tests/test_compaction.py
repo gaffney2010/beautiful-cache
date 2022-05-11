@@ -59,16 +59,10 @@ class TestCompaction(unittest.TestCase):
         )
 
         self.assertDictEqual(
-            engine.file_system.files,
-            {
-                Filename("test_policy/data/f2.html"): "...",
-            },
+            engine.file_system.files, {Filename("test_policy/data/f2.html"): "...",},
         )
         self.assertDictEqual(
-            engine.database.db,
-            {
-                make_row("test_policy", "f2", ""): Time(3),
-            },
+            engine.database.db, {make_row("test_policy", "f2", ""): Time(3),},
         )
 
     def test_fat_happy_path(self):
@@ -264,8 +258,7 @@ class TestCompaction(unittest.TestCase):
 
         # Slightly larger trim will remove second access record, leaving only p:1
         compaction.compact(
-            "test_policy",
-            engine=engine,
+            "test_policy", engine=engine,
         )
 
         self.assertDictEqual(
@@ -324,9 +317,7 @@ class TestCompaction(unittest.TestCase):
         # Notice that all the tags got remapped for the new doc.
         self.assertDictEqual(
             engine.database.db,
-            {
-                make_row("test_policy", "f1", "html:0/body:0/c:0"): 1,
-            },
+            {make_row("test_policy", "f1", "html:0/body:0/c:0"): 1,},
         )
 
     def test_erase_entire_old_before_any_new(self):
