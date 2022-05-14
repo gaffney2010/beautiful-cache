@@ -103,7 +103,7 @@ class CacheTagList(object):
 
 
 class BeautifulCache(CacheTag):
-    def __init__(self, url: Url, policy: Policy, engine: BcEngine):
+    def __init__(self, url: Url, policy: Policy, engine: BcEngine, fix_multiple_htmls: bool = False):
         # TODO: Docstrings
         self.url = url
         if not isinstance(url, Url):
@@ -114,6 +114,9 @@ class BeautifulCache(CacheTag):
         self.engine = engine
 
         html = self.engine.read_url(self.policy, self.url)
+        if fix_multiple_htmls:
+            # This line is for those occasional pages that have multiple <html> tags.
+            html = "<html>" + html.replace("<html", "<b").replace("</html", "</b") + "</html>"
         soup = bs4.BeautifulSoup(html, features="lxml")
 
         super().__init__(soup, self.policy, url, self.engine)
