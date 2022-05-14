@@ -115,10 +115,11 @@ class BeautifulCache(CacheTag):
         self.engine = engine
 
         html = self.engine.read_url(self.policy, self.url)
+        logging.error(f"Before soup : {html}")
         if fix_multiple_htmls:
-            logging.error("HELLO")
             # This line is for those occasional pages that have multiple <html> tags.
             html = "<html>" + html.replace("<html", "<b").replace("</html", "</b") + "</html>"
+            logging.error(f"After soup : {html}")
         soup = bs4.BeautifulSoup(html, features="lxml")
 
         super().__init__(soup, self.policy, url, self.engine)
