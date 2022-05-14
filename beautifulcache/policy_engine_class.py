@@ -34,10 +34,10 @@ class BcEngine(object):
 
         # Cast to soup then back, so as to erase whitespace
         untrimmed_html = self.url_reader._read(url)
-        trimmed_html = tree_crawl.trim_html(untrimmed_html)
         if fix_multiple_htmls:
             # This line is for those occasional pages that have multiple <html> tags.
-            trimmed_html = "<html>" + trimmed_html.replace("<html", "<b").replace("</html", "</b") + "</html>"
+            untrimmed_html = "<html>" + untrimmed_html.replace("<html", "<b").replace("</html", "</b") + "</html>"
+        trimmed_html = tree_crawl.trim_html(untrimmed_html)
 
         html = Html(trimmed_html)
 
