@@ -114,12 +114,7 @@ class BeautifulCache(CacheTag):
         # TODO: Default engine if not specified.  Make input param Optional then.
         self.engine = engine
 
-        html = self.engine.read_url(self.policy, self.url)
-        logging.error(f"Before soup : {html}")
-        if fix_multiple_htmls:
-            # This line is for those occasional pages that have multiple <html> tags.
-            html = "<html>" + html.replace("<html", "<b").replace("</html", "</b") + "</html>"
-            logging.error(f"After soup : {html}")
+        html = self.engine.read_url(self.policy, self.url, fix_multiple_htmls=fix_multiple_htmls)
         soup = bs4.BeautifulSoup(html, features="lxml")
 
         super().__init__(soup, self.policy, url, self.engine)
