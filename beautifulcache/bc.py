@@ -101,6 +101,7 @@ class CacheTagList(object):
     def materialize(self) -> List[Ingredient]:
         return [t.materialize() for t in self.tag_list]
 
+import logging
 
 class BeautifulCache(CacheTag):
     def __init__(self, url: Url, policy: Policy, engine: BcEngine, fix_multiple_htmls: bool = False):
@@ -115,6 +116,7 @@ class BeautifulCache(CacheTag):
 
         html = self.engine.read_url(self.policy, self.url)
         if fix_multiple_htmls:
+            logging.error("HELLO")
             # This line is for those occasional pages that have multiple <html> tags.
             html = "<html>" + html.replace("<html", "<b").replace("</html", "</b") + "</html>"
         soup = bs4.BeautifulSoup(html, features="lxml")
