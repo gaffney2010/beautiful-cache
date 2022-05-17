@@ -101,10 +101,18 @@ class CacheTagList(object):
     def materialize(self) -> List[Ingredient]:
         return [t.materialize() for t in self.tag_list]
 
+
 import logging
 
+
 class BeautifulCache(CacheTag):
-    def __init__(self, url: Url, policy: Policy, engine: BcEngine, fix_multiple_htmls: bool = False):
+    def __init__(
+        self,
+        url: Url,
+        policy: Policy,
+        engine: BcEngine,
+        fix_multiple_htmls: bool = False,
+    ):
         # TODO: Docstrings
         self.url = url
         if not isinstance(url, Url):
@@ -114,7 +122,9 @@ class BeautifulCache(CacheTag):
         # TODO: Default engine if not specified.  Make input param Optional then.
         self.engine = engine
 
-        html = self.engine.read_url(self.policy, self.url, fix_multiple_htmls=fix_multiple_htmls)
+        html = self.engine.read_url(
+            self.policy, self.url, fix_multiple_htmls=fix_multiple_htmls
+        )
         soup = bs4.BeautifulSoup(html, features="lxml")
 
         super().__init__(soup, self.policy, url, self.engine)

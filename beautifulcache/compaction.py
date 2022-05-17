@@ -1,3 +1,4 @@
+import traceback
 from typing import Any, Dict, Optional
 
 import yaml  # type: ignore
@@ -71,7 +72,10 @@ def compact_thin(
 
 # TODO: Default engine.
 def compact(
-    policy: Policy, engine: BcEngine, settings: Optional[Dict[str, Any]] = None,
+    policy: Policy,
+    engine: BcEngine,
+    settings: Optional[Dict[str, Any]] = None,
+    continue_on_error: bool = False,
 ) -> CompactionRecord:
     if settings is None:
         settings = {}
@@ -117,8 +121,10 @@ def compact(
             print(f"Compacting {url}")
             try:
                 file_compaction(policy, url, engine, record)
-            except BcException as err:
-                raise BcException(f"Error compacting {url}: {err}")
+            except Exception as err:
+                traceback.print_exc()
+                if not continue_on_error:
+                    raise BcException(f"Error compacting {url}: {err}")
 
     size_after = engine.file_system.size(policy)
     record.size_delta = size_before - size_after
