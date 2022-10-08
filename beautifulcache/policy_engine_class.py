@@ -3,6 +3,7 @@ import os
 import time
 
 import attr
+import requests
 import retrying  # type: ignore
 from selenium import webdriver
 
@@ -76,6 +77,7 @@ class WebDriver(object):
             self._driver = webdriver.Firefox(
                 options=options,
                 service_log_path="{}/geckodriver.log".format(LOGGING_DIR),
+                firefox_binary="/usr/bin/firefox",
             )
             logging.debug("Finished initializing driver.")
         return self._driver
@@ -369,6 +371,96 @@ class LazyDatabase(ConcreteDatabase):
     def commit(self) -> None:
         self.batch_load(self.buffer)
         self.buffer = list()
+
+
+class FastUrlReader(UrlReader):
+    """Uses request library"""
+
+    def __init__(self):
+        super().__init__()
+
+    @retrying.retry(wait_random_min=200, wait_random_max=400, stop_max_attempt_number=3)
+    def _read_url_to_string_helper(self, help_url: Url):
+        r = requests.get(help_url)
+        return r.text
+
+    def _read(self, url: Url) -> Html:
+        page_text = self._read_url_to_string_helper(url)
+        return Html(page_text)
+
+
+class NoCacheDatabase(Database):
+    def _execute(self, cursor, query):
+        pass
+
+    def _sanitize_policy(self, policy: Union[Policy, str]) -> str:
+        return policy
+
+    def _make_table(self, policy: Union[Policy, str]) -> None:
+        pass
+
+    def _append(self, row: Row, ts: Time) -> None:
+        pass
+
+    def _pop_filter(
+        self,
+        policy: Union[Policy, str],
+        priority: str,
+        record: Optional[CompactionRecord] = None,
+        other_filters: str = "",
+    ) -> Set[Url]:
+        raise Exception("NoCacheDatabase should never compact.")
+
+    def pop(
+        self,
+        policy: Union[Policy, str],
+        priority: str,
+        record: Optional[CompactionRecord] = None,
+    ) -> Set[Url]:
+        raise Exception("NoCacheDatabase should never compact.")
+
+    def exists(
+        self,
+        policy: Union[Policy, str],
+        url: Optional[Url] = None,
+        other_filters: str = "",
+    ) -> bool:
+        return False
+
+    def pop_query(self, policy: Union[Policy, str], url: Url) -> Dict[Id, Time]:
+        raise Exception("NoCacheDatabase should never compact.")
+
+    def batch_load(self, rows: List[Tuple[Row, Time]]) -> None:
+        pass
+
+
+class NoCacheFileSystem(FileSystem):
+    def _make_dir(self, policy: Policy) -> None:
+        pass
+
+    def size(self, policy: Policy) -> Bytes:
+        return 0
+
+    def _read_fn(self, policy: Policy, fn: Filename) -> str:
+        raise Exception("NoCacheFileSystem should never read.")
+
+    def _write_fn(self, policy: Policy, fn: Filename, content: str) -> None:
+        pass
+
+    def _exists_fn(self, policy: Policy, fn: Filename) -> bool:
+        return False
+
+    def _delete_fn(self, policy: Policy, fn: Filename) -> None:
+        pass
+
+
+def naked_factory() -> BcEngine:
+    return BcEngine(
+        url_reader=FastUrlReader(),
+        database=NoCacheDatabase(),
+        file_system=NoCacheFileSystem(),
+        clock=ConcreteClock(),
+    )
 
 
 def bc_engine_factory(mysql_db, driver, lazy: bool) -> BcEngine:
