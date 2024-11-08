@@ -1,260 +1,64 @@
+import sys
+import os
+
+# Add the parent directory to the sys.path
+current_dir = os.path.dirname(__file__)  # Get the current script's directory
+parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
+sys.path.append(parent_dir)
+
 import unittest
 
-import bs4  # type: ignore
+import bc
+import mock_objects
 
-from beautifulcache import bc
-from beautifulcache.shared_types import *
-from beautifulcache.tests.mock_objects import *
-from beautifulcache import tree_crawl
+# Example from beautiful soup doc
+html_doc = """<html><head><title>The Dormouse's story</title></head>
+<body>
+<p class="title"><b>The Dormouse's story</b></p>
+
+<p class="story">Once upon a time there were three little sisters; and their names were
+<a href="http://example.com/elsie" class="sister" id="link1">Elsie</a>,
+<a href="http://example.com/lacie" class="sister" id="link2">Lacie</a> and
+<a href="http://example.com/tillie" class="sister" id="link3">Tillie</a>;
+and they lived at the bottom of a well.</p>
+
+<p class="story">...</p>
+"""
 
 
-class TestEndToEnd(unittest.TestCase):
+class TestBeautifulCache(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        pass
 
-    # No compaction
-    def test_happy_path(self):
-        example_html = Html(
-            """
-        <html><body>
-        <table>
-        <tr>
-            <td>row: 1, <a href="row1.png">cell:1</a></td>
-            <td>row: 1, <a href="row1.png">cell:2</a></td>
-        </tr>
-        <tr>
-            <td>row: 2, <a href="row2.png">cell:1</a></td>
-            <td>row: 2, <a href="row2.png">cell:2</a></td>
-        </tr>
-        </table>
-        </body</html>
-        """
+    async def test_happy_path(self):
+        cacher = mock_objects.MockCacher()
+        # Fill in with default namespace a, and empty parse_only
+        cacher.set("+".join(["a", "abc.com", "_"]), html_doc, 1)
+        scraper = mock_objects.mock_scraper_fn(dict())
+        soup = await bc.BeautifulCache("abc.com", scraper, cacher)
+
+        self.assertEqual(str(soup.title), "<title>The Dormouse's story</title>")
+        self.assertEqual(soup.title.name, "title")
+        self.assertEqual(soup.title.string, "The Dormouse's story")
+        self.assertEqual(soup.title.parent.name, "head")
+        self.assertEqual(
+            str(soup.p), '<p class="title"><b>The Dormouse\'s story</b></p>'
+        )
+        self.assertEqual(soup.p["class"], ["title"])
+        self.assertEqual(
+            str(soup.a),
+            '<a class="sister" href="http://example.com/elsie" id="link1">Elsie</a>',
+        )
+        self.assertEqual(
+            list(map(str, soup.find_all("a"))),
+            [
+                '<a class="sister" href="http://example.com/elsie" id="link1">Elsie</a>',
+                '<a class="sister" href="http://example.com/lacie" id="link2">Lacie</a>',
+                '<a class="sister" href="http://example.com/tillie" id="link3">Tillie</a>',
+            ],
+        )
+        self.assertEqual(
+            str(soup.find(id="link3")),
+            '<a class="sister" href="http://example.com/tillie" id="link3">Tillie</a>',
         )
 
-        engine = BcEngineGenerator().add_website(Url("test_url"), example_html).build()
-
-        # Should be able to inject engines like this
-        soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
-        cells = soup.find_all("td")
-        # The materialize returns the usual BeautifulSoup objects.
-        engine.clock.tick()
-        link0 = cells[0].find("a").materialize()
-        engine.clock.tick()
-        link3 = cells[3].find("a").materialize()
-
-        # TODO: Uncomment after we fix Ingredient
-        # self.assertTrue(isinstance(link0, Ingredient))
-        # self.assertTrue(isinstance(link3, Ingredient))
-        self.assertEqual(link0.string, "cell:1")
-        self.assertEqual(link3.string, "cell:2")
-        self.assertEqual(link0["href"], "row1.png")
-        self.assertEqual(link3["href"], "row2.png")
-
-        # Check that a cached version of the html (after trimming) has been saved.
-        self.assertDictEqual(
-            engine.file_system.files,
-            {"test_policy/data/test_url.html": tree_crawl.trim_html(example_html)},
-        )
-
-        # Check that three Request records have been added to the db.  One for the
-        #  URL load, and one for each request record.
-        self.assertDictEqual(
-            engine.database.db,
-            {
-                make_row("test_policy", "test_url", ""): 0,
-                # Timestamps determined by the number of clicks that have passed.
-                make_row(
-                    "test_policy", "test_url", "html:0/body:0/table:0/tr:0/td:0/a:0",
-                ): 1,
-                make_row(
-                    "test_policy", "test_url", "html:0/body:0/table:0/tr:1/td:1/a:0",
-                ): 2,
-            },
-        )
-
-    def test_uses_cache(self):
-        old_html = "<html><body><tag>OLD</tag></body></html>"
-        new_html = Html("<html><body><tag>NEW</tag></body></html>")
-
-        engine = (
-            BcEngineGenerator()
-            .add_file("test_policy/data/test_url.html", old_html)
-            .add_website("test_url", new_html)
-            .build()
-        )
-
-        soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
-        self.assertEqual(soup.find("tag").materialize().string, "OLD")
-
-        # Shouldn't have a request for the root, because I didn't reload.
-        self.assertDictEqual(
-            engine.database.db,
-            {make_row("test_policy", "test_url", "html:0/body:0/tag:0"): 0},
-        )
-
-    def test_multiple_policies_happy_path(self):
-        example_html_1 = Html("<html><body>Page 1</body</html>")
-        example_html_2 = Html("<html><body>Page 2</body</html>")
-
-        engine = (
-            BcEngineGenerator()
-            .add_website(Url("test_url_1"), example_html_1)
-            .add_website(Url("test_url_2"), example_html_2)
-            .build()
-        )
-
-        _ = bc.BeautifulCache(Url("test_url_1"), Policy("test_policy_1"), engine=engine)
-        _ = bc.BeautifulCache(Url("test_url_2"), Policy("test_policy_2"), engine=engine)
-
-        # These live in different directories.
-        self.assertDictEqual(
-            engine.file_system.files,
-            {
-                "test_policy_1/data/test_url_1.html": tree_crawl.trim_html(
-                    example_html_1
-                ),
-                "test_policy_2/data/test_url_2.html": tree_crawl.trim_html(
-                    example_html_2
-                ),
-            },
-        )
-
-        # In practice, these will live in separate databases.
-        self.assertDictEqual(
-            engine.database.db,
-            {
-                make_row("test_policy_1", "test_url_1", ""): 0,
-                make_row("test_policy_2", "test_url_2", ""): 0,
-            },
-        )
-
-    def test_multiple_policies_download_same_page(self):
-        example_html_1 = Html("<html><body>Page 1</body</html>")
-
-        engine = (
-            BcEngineGenerator().add_website(Url("test_url_1"), example_html_1).build()
-        )
-
-        # Download to both policies
-        _ = bc.BeautifulCache(Url("test_url_1"), Policy("test_policy_1"), engine=engine)
-        _ = bc.BeautifulCache(Url("test_url_1"), Policy("test_policy_2"), engine=engine)
-
-        # Saves to both directories
-        self.assertDictEqual(
-            engine.file_system.files,
-            {
-                "test_policy_1/data/test_url_1.html": tree_crawl.trim_html(
-                    example_html_1
-                ),
-                "test_policy_2/data/test_url_1.html": tree_crawl.trim_html(
-                    example_html_1
-                ),
-            },
-        )
-
-        # Makes two records
-        self.assertDictEqual(
-            engine.database.db,
-            {
-                make_row("test_policy_1", "test_url_1", ""): 0,
-                make_row("test_policy_2", "test_url_1", ""): 0,
-            },
-        )
-
-    def test_multiple_policies_with_materializtions(self):
-        example_html_1 = Html("<html><body>Page 1 <b>A</b><b><B</b></body</html>")
-
-        engine = (
-            BcEngineGenerator().add_website(Url("test_url_1"), example_html_1).build()
-        )
-
-        # Download to both policies
-        soup_1 = bc.BeautifulCache(
-            Url("test_url_1"), Policy("test_policy_1"), engine=engine
-        )
-        soup_2 = bc.BeautifulCache(
-            Url("test_url_1"), Policy("test_policy_2"), engine=engine
-        )
-
-        # Materialize on different policies
-        engine.clock.tick()
-        soup_1.find_all("b")[0].materialize()
-        soup_2.find_all("b")[1].materialize()
-
-        # Records to different policies
-        self.assertDictEqual(
-            engine.database.db,
-            {
-                make_row("test_policy_1", "test_url_1", ""): 0,
-                make_row("test_policy_2", "test_url_1", ""): 0,
-                make_row("test_policy_1", "test_url_1", "html:0/body:0/b:0"): 1,
-                make_row("test_policy_2", "test_url_1", "html:0/body:0/b:1"): 1,
-            },
-        )
-
-
-#     # TODO: This needs to be done with a real db
-#     # def test_upserts_overwrite(self):
-#     #     pass
-
-
-class TestIdEndToEnd(unittest.TestCase):
-    def test_id_happy_path(self):
-        example_html = Html(
-            """
-        <html><body>
-        <x>
-            <y>First y</y>
-            <y>Second y <z>z</z></y>
-        </x>
-        </body</html>
-        """
-        )
-
-        engine = BcEngineGenerator().add_website(Url("test_url"), example_html).build()
-
-        soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
-        x = soup.find("x")
-        y1 = x.find_all("y")[0]
-        y2 = x.find_all("y")[1]
-        z = y2.find("z")
-
-        self.assertEqual(str(x.id()), "html:0/body:0/x:0")
-        self.assertEqual(y1.id(), "html:0/body:0/x:0/y:0")
-        self.assertEqual(y2.id(), "html:0/body:0/x:0/y:1")
-        self.assertEqual(z.id(), "html:0/body:0/x:0/y:1/z:0")
-
-    def test_find_params(self):
-        example_html = Html(
-            """
-        <html><body>
-        <x>
-            <y>First y</y>
-            <y class="second">Second y <z>z</z></y>
-        </x>
-        </body</html>
-        """
-        )
-
-        engine = BcEngineGenerator().add_website(Url("test_url"), example_html).build()
-
-        soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
-        y2 = soup.find("y", {"class": "second"})
-
-        self.assertEqual(y2.id(), "html:0/body:0/x:0/y:1")
-
-    def test_cache(self):
-        example_html = Html(
-            """
-        <html><body>
-        <x>X</x>
-        </body</html>
-        """
-        )
-
-        engine = BcEngineGenerator().add_website(Url("test_url"), example_html).build()
-
-        soup = bc.BeautifulCache(Url("test_url"), Policy("test_policy"), engine=engine)
-        x = soup.find("x")
-
-        self.assertIsNone(x._id)
-        self.assertEqual(x.id(), "html:0/body:0/x:0")
-        self.assertEqual(x._id, "html:0/body:0/x:0")
